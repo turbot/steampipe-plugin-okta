@@ -5,7 +5,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/plugin/schema"
 )
 
-type azureADConfig struct {
+type oktaConfig struct {
 	Domain *string `cty:"domain"`
 	Token  *string `cty:"token"`
 }
@@ -20,14 +20,14 @@ var ConfigSchema = map[string]*schema.Attribute{
 }
 
 func ConfigInstance() interface{} {
-	return &azureADConfig{}
+	return &oktaConfig{}
 }
 
 // GetConfig :: retrieve and cast connection config from query data
-func GetConfig(connection *plugin.Connection) azureADConfig {
+func GetConfig(connection *plugin.Connection) oktaConfig {
 	if connection == nil || connection.Config == nil {
-		return azureADConfig{}
+		return oktaConfig{}
 	}
-	config, _ := connection.Config.(azureADConfig)
+	config, _ := connection.Config.(oktaConfig)
 	return config
 }
