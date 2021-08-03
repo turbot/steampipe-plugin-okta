@@ -2,6 +2,8 @@ package okta
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/ettle/strcase"
 	"github.com/okta/okta-sdk-golang/v2/okta"
@@ -20,18 +22,18 @@ func tableOktaUser() *plugin.Table {
 		Description: "Represents an Okta user account.",
 		List: &plugin.ListConfig{
 			Hydrate: listOktaUsers,
-			// 	KeyColumns: plugin.KeyColumnSlice{
-			// 		// Key fields
-			// 		{Name: "id", Require: plugin.Optional},
-			// 		{Name: "user_principal_name", Require: plugin.Optional},
-			// 		{Name: "filter", Require: plugin.Optional},
+			KeyColumns: plugin.KeyColumnSlice{
+				// Key fields
+				{Name: "id", Require: plugin.Optional},
+				{Name: "login", Require: plugin.Optional},
+				{Name: "email", Require: plugin.Optional},
+				{Name: "status", Require: plugin.Optional},
+				{Name: "filter", Require: plugin.Optional}, // https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter
+				{Name: "last_updated", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 
-			// 		// Other fields for filtering OData
-			// 		{Name: "user_type", Require: plugin.Optional},
-			// 		{Name: "account_enabled", Require: plugin.Optional, Operators: []string{"<>", "="}},
-			// 		{Name: "display_name", Require: plugin.Optional},
-			// 		{Name: "surname", Require: plugin.Optional},
-			// 	},
+				// Other fields for filtering
+				{Name: "status", Require: plugin.Optional},
+			},
 		},
 
 		Columns: []*plugin.Column{
@@ -40,6 +42,7 @@ func tableOktaUser() *plugin.Table {
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for user."},
 			{Name: "email", Type: proto.ColumnType_STRING, Transform: transform.From(userProfile), Description: "Primary email address of user."},
 			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when user was created."},
+			{Name: "filter", Type: proto.ColumnType_STRING, Transform: transform.FromQual("filter"), Description: "Filter string to [filter](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter) users. Input filter query should not be encoded."},
 
 			// other columns
 			{Name: "activated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when transition to ACTIVE status completed."},
@@ -51,9 +54,10 @@ func tableOktaUser() *plugin.Table {
 			{Name: "status_changed", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when status last changed."},
 			{Name: "transitioning_to_status", Type: proto.ColumnType_STRING, Description: "Target status of an in-progress asynchronous status transition."},
 
-			// JSOn columns
+			// JSON columns
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "User profile properties."},
 			{Name: "type", Type: proto.ColumnType_JSON, Description: "User type that determines the schema for the user's profile."},
+			{Name: "user_groups", Type: proto.ColumnType_JSON, Hydrate: listUserGroups, Transform: transform.FromValue(), Description: "List of groups of which the user is a member."},
 		},
 	}
 }
@@ -77,48 +81,65 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	}
 
 	input := query.Params{}
-	// if helpers.StringSliceContains(d.QueryContext.Columns, "member_of") {
-	// 	input.Expand = odata.Expand{
-	// 		Relationship: "memberOf",
-	// 		Select:       []string{"id", "displayName"},
-	// 	}
-	// }
+	equalQuals := d.KeyColumnQuals
+	quals := d.Quals
 
-	// equalQuals := d.KeyColumnQuals
-	// quals := d.Quals
+	var queryFilter string
+	filter := buildQueryFilter(equalQuals)
 
-	// var queryFilter string
-	// filter := buildQueryFilter(equalQuals)
-	// filter = append(filter, buildBoolNEFilter(quals)...)
+	// TODO - optimize or move it to a utility function
+	if quals["last_updated"] != nil {
+		for _, q := range quals["last_updated"].Quals {
+			timeString := q.Value.GetTimestampValue().AsTime().Format(filterTimeFormat)
+			// https://developer.okta.com/docs/reference/api-overview/#operators
+			switch q.Operator {
+			case "=":
+				filter = append(filter, fmt.Sprintf("%s eq \"%s\"", "lastUpdated", timeString))
+			case ">=":
+				filter = append(filter, fmt.Sprintf("%s ge \"%s\"", "lastUpdated", timeString))
+			case ">":
+				filter = append(filter, fmt.Sprintf("%s gt \"%s\"", "lastUpdated", timeString))
+			case "<=":
+				filter = append(filter, fmt.Sprintf("%s le \"%s\"", "lastUpdated", timeString))
+			case "<":
+				filter = append(filter, fmt.Sprintf("%s lt \"%s\"", "lastUpdated", timeString))
+			}
+		}
+	}
 
-	// if equalQuals["filter"] != nil {
-	// 	queryFilter = equalQuals["filter"].GetStringValue()
-	// }
+	if equalQuals["filter"] != nil {
+		queryFilter = equalQuals["filter"].GetStringValue()
+	}
 
-	// if queryFilter != "" {
-	// 	input.Filter = queryFilter
-	// } else if len(filter) > 0 {
-	// 	input.Filter = strings.Join(filter, " and ")
-	// }
+	if queryFilter != "" {
+		input.Filter = queryFilter
+	} else if len(filter) > 0 {
+		input.Filter = strings.Join(filter, " and ")
+	}
 
-	// if input.Filter != "" {
-	// 	plugin.Logger(ctx).Debug("Filter", "input.Filter", input.Filter)
-	// }
+	if input.Filter != "" {
+		plugin.Logger(ctx).Error("Filter", "input.Filter", input.Filter)
+	}
 
-	pagesLeft := true
-	for pagesLeft {
-		users, _, err := client.User.ListUsers(ctx, &input)
+	users, resp, err := client.User.ListUsers(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users {
+		d.StreamListItem(ctx, user)
+	}
+
+	// paging
+	for resp.HasNextPage() {
+		var nextUserSet []*okta.User
+		resp, err = resp.Next(ctx, &nextUserSet)
 		if err != nil {
-			// if isNotFoundError(err) {
-			// 	return nil, nil
-			// }
 			return nil, err
 		}
-
-		for _, user := range users {
+		for _, user := range nextUserSet {
 			d.StreamListItem(ctx, user)
 		}
-		pagesLeft = false
 	}
 
 	return nil, err
@@ -126,69 +147,47 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 
 //// HYDRATE FUNCTIONS
 
-// func getTenantId(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-// 	plugin.Logger(ctx).Debug("getTenantId")
+func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	user := h.Item.(*okta.User)
+	plugin.Logger(ctx).Debug("listUserGroups")
+	client, err := Connect(ctx, d)
+	if err != nil {
+		return nil, err
+	}
 
-// 	session, err := GetNewSession(ctx, d)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	groups, resp, err := client.User.ListUserGroups(ctx, user.Id)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return session.TenantID, nil
-// }
+	for resp.HasNextPage() {
+		var nextGroupSet []*okta.Group
+		resp, err = resp.Next(ctx, &nextGroupSet)
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, nextGroupSet...)
+	}
 
-// func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap) []string {
-// 	filters := []string{}
+	return groups, nil
+}
 
-// 	filterQuals := map[string]string{
-// 		"display_name":             "string",
-// 		"id":                       "string",
-// 		"surname":                  "string",
-// 		"user_principal_name":      "string",
-// 		"user_type":                "string",
-// 		"account_enabled":          "bool",
-// 		"mail_enabled":             "bool",
-// 		"security_enabled":         "bool",
-// 		"on_premises_sync_enabled": "bool",
-// 	}
+//// other useful functions
+func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap) []string {
+	filters := []string{}
 
-// 	for qual, qualType := range filterQuals {
-// 		switch qualType {
-// 		case "string":
-// 			if equalQuals[qual] != nil {
-// 				filters = append(filters, fmt.Sprintf("%s eq '%s'", strcase.ToCamel(qual), equalQuals[qual].GetStringValue()))
-// 			}
-// 		case "bool":
-// 			if equalQuals[qual] != nil {
-// 				filters = append(filters, fmt.Sprintf("%s eq %t", strcase.ToCamel(qual), equalQuals[qual].GetBoolValue()))
-// 			}
-// 		}
-// 	}
+	filterQuals := map[string]string{
+		"id":     "id",
+		"email":  "profile.email",
+		"login":  "profile.login",
+		"status": "status",
+	}
 
-// 	return filters
-// }
+	for qual, filterColumn := range filterQuals {
+		if equalQuals[qual] != nil {
+			filters = append(filters, fmt.Sprintf("%s eq \"%s\"", filterColumn, equalQuals[qual].GetStringValue()))
+		}
+	}
 
-// func buildBoolNEFilter(quals plugin.KeyColumnQualMap) []string {
-// 	filters := []string{}
-
-// 	filterQuals := []string{
-// 		"account_enabled",
-// 		"mail_enabled",
-// 		"on_premises_sync_enabled",
-// 		"security_enabled",
-// 	}
-
-// 	for _, qual := range filterQuals {
-// 		if quals[qual] != nil {
-// 			for _, q := range quals[qual].Quals {
-// 				value := q.Value.GetBoolValue()
-// 				if q.Operator == "<>" {
-// 					filters = append(filters, fmt.Sprintf("%s eq %t", strcase.ToCamel(qual), !value))
-// 					break
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return filters
-// }
+	return filters
+}
