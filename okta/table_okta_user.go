@@ -20,6 +20,11 @@ func tableOktaUser() *plugin.Table {
 	return &plugin.Table{
 		Name:        "okta_user",
 		Description: "Represents an Okta user account.",
+		Get: &plugin.GetConfig{
+			Hydrate:           getOktaUser,
+			KeyColumns:        plugin.SingleColumn("id"),
+			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaUsers,
 			KeyColumns: plugin.KeyColumnSlice{
@@ -124,6 +129,31 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 }
 
 //// HYDRATE FUNCTIONS
+
+func getOktaUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	logger.Debug("getOktaUser")
+	var userId string
+	if h.Item != nil {
+		userId = h.Item.(*okta.User).Id
+	} else {
+		userId = d.KeyColumnQuals["id"].GetStringValue()
+	}
+
+	client, err := Connect(ctx, d)
+	if err != nil {
+		logger.Error("getOktaUser", "connect", err)
+		return nil, err
+	}
+
+	user, _, err := client.User.GetUser(ctx, userId)
+	if err != nil {
+		logger.Error("getOktaUser", "get user", err)
+		return nil, err
+	}
+
+	return user, nil
+}
 
 func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	user := h.Item.(*okta.User)
