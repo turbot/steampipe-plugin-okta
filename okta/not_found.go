@@ -6,7 +6,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
 
-// function which returns an ErrorPredicate for Azure API calls
+// function which returns an ErrorPredicate for Okta API calls
 func isNotFoundError(notFoundErrors []string) plugin.ErrorPredicate {
 	return func(err error) bool {
 		if err != nil {
