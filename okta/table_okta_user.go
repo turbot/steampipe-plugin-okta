@@ -82,7 +82,7 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	quals := d.Quals
 
 	var queryFilter string
-	filter := buildQueryFilter(equalQuals)
+	filter := buildUserQueryFilter(equalQuals)
 
 	// TODO - optimize or move it to a utility function
 	// https://developer.okta.com/docs/reference/api-overview/#operators
@@ -247,7 +247,7 @@ func transformUserGroups(ctx context.Context, d *transform.TransformData) (inter
 
 //// other useful functions
 
-func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap) []string {
+func buildUserQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap) []string {
 	filters := []string{}
 
 	filterQuals := map[string]string{
