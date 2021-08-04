@@ -23,16 +23,15 @@ func tableOktaUser() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOktaUsers,
 			KeyColumns: plugin.KeyColumnSlice{
+				// https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter
+				// https://developer.okta.com/docs/reference/api-overview/#filter
 				// Key fields
 				{Name: "id", Require: plugin.Optional},
 				{Name: "login", Require: plugin.Optional},
 				{Name: "email", Require: plugin.Optional},
 				{Name: "status", Require: plugin.Optional},
-				{Name: "filter", Require: plugin.Optional}, // https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter
+				{Name: "filter", Require: plugin.Optional},
 				{Name: "last_updated", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
-
-				// Other fields for filtering
-				{Name: "status", Require: plugin.Optional},
 			},
 		},
 
@@ -62,16 +61,6 @@ func tableOktaUser() *plugin.Table {
 	}
 }
 
-func userProfile(ctx context.Context, d *transform.TransformData) (interface{}, error) {
-	user := d.HydrateItem.(*okta.User)
-	if user.Profile == nil {
-		return nil, nil
-	}
-	userProfile := *user.Profile
-
-	return userProfile[strcase.ToCamel(d.ColumnName)], nil
-}
-
 //// LIST FUNCTION
 
 func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
@@ -88,22 +77,11 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	filter := buildQueryFilter(equalQuals)
 
 	// TODO - optimize or move it to a utility function
+	// https://developer.okta.com/docs/reference/api-overview/#operators
 	if quals["last_updated"] != nil {
 		for _, q := range quals["last_updated"].Quals {
 			timeString := q.Value.GetTimestampValue().AsTime().Format(filterTimeFormat)
-			// https://developer.okta.com/docs/reference/api-overview/#operators
-			switch q.Operator {
-			case "=":
-				filter = append(filter, fmt.Sprintf("%s eq \"%s\"", "lastUpdated", timeString))
-			case ">=":
-				filter = append(filter, fmt.Sprintf("%s ge \"%s\"", "lastUpdated", timeString))
-			case ">":
-				filter = append(filter, fmt.Sprintf("%s gt \"%s\"", "lastUpdated", timeString))
-			case "<=":
-				filter = append(filter, fmt.Sprintf("%s le \"%s\"", "lastUpdated", timeString))
-			case "<":
-				filter = append(filter, fmt.Sprintf("%s lt \"%s\"", "lastUpdated", timeString))
-			}
+			filter = append(filter, fmt.Sprintf("%s %s \"%s\"", "lastUpdated", operatorsMap[q.Operator], timeString))
 		}
 	}
 
@@ -172,7 +150,20 @@ func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	return groups, nil
 }
 
+//// TRANSFORM FUNCTION
+
+func userProfile(ctx context.Context, d *transform.TransformData) (interface{}, error) {
+	user := d.HydrateItem.(*okta.User)
+	if user.Profile == nil {
+		return nil, nil
+	}
+	userProfile := *user.Profile
+
+	return userProfile[strcase.ToCamel(d.ColumnName)], nil
+}
+
 //// other useful functions
+
 func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap) []string {
 	filters := []string{}
 
