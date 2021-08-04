@@ -9,15 +9,19 @@ import (
 
 const filterTimeFormat = "2006-01-02T15:04:05.000Z"
 
-// Filters sympol - comparison operator map for okta
-var operatorsMap = map[string]string{
-	"=":  "eq",
-	">=": "ge",
-	">":  "gt",
-	"<=": "le",
-	"<":  "lt",
-	"<>": "ne",
-}
+var (
+	// Filters sympol - comparison operator map for okta
+	operatorsMap = map[string]string{
+		"=":  "eq",
+		">=": "ge",
+		">":  "gt",
+		"<=": "le",
+		"<":  "lt",
+		"<>": "ne",
+	}
+	// TODO - policy types creating issue "OAUTH_AUTHORIZATION_POLICY", "ACCESS_POLICY", "PROFILE_ENROLLMENT"
+	policyTypes = []string{"OKTA_SIGN_ON", "PASSWORD", "MFA_ENROLL", "IDP_DISCOVERY"}
+)
 
 //// other useful functions
 
