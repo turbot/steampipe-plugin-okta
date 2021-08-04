@@ -56,7 +56,7 @@ func tableOktaUser() *plugin.Table {
 			// JSON columns
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "User profile properties."},
 			{Name: "type", Type: proto.ColumnType_JSON, Description: "User type that determines the schema for the user's profile."},
-			{Name: "user_groups", Type: proto.ColumnType_JSON, Hydrate: listUserGroups, Transform: transform.FromValue(), Description: "List of groups of which the user is a member."},
+			{Name: "user_groups", Type: proto.ColumnType_JSON, Hydrate: listUserGroups, Transform: transform.From(transformUserGroups), Description: "List of groups of which the user is a member."},
 		},
 	}
 }
@@ -160,6 +160,21 @@ func userProfile(ctx context.Context, d *transform.TransformData) (interface{}, 
 	userProfile := *user.Profile
 
 	return userProfile[strcase.ToCamel(d.ColumnName)], nil
+}
+
+func transformUserGroups(ctx context.Context, d *transform.TransformData) (interface{}, error) {
+	groups := d.HydrateItem.([]*okta.Group)
+	var groupsData = []map[string]string{}
+
+	for _, group := range groups {
+		groupsData = append(groupsData, map[string]string{
+			"id":   group.Id,
+			"name": group.Profile.Name,
+			"type": group.Type,
+		})
+	}
+
+	return groupsData, nil
 }
 
 //// other useful functions
