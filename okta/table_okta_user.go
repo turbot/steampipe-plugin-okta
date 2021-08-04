@@ -62,6 +62,7 @@ func tableOktaUser() *plugin.Table {
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "User profile properties."},
 			{Name: "type", Type: proto.ColumnType_JSON, Description: "User type that determines the schema for the user's profile."},
 			{Name: "user_groups", Type: proto.ColumnType_JSON, Hydrate: listUserGroups, Transform: transform.From(transformUserGroups), Description: "List of groups of which the user is a member."},
+			{Name: "assigned_roles", Type: proto.ColumnType_JSON, Hydrate: listAssignedRolesForUser, Transform: transform.FromValue(), Description: "List of roles assigned to user."},
 		},
 	}
 }
@@ -69,8 +70,10 @@ func tableOktaUser() *plugin.Table {
 //// LIST FUNCTION
 
 func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
+		logger.Error("listOktaUsers", "connect", err)
 		return nil, err
 	}
 
@@ -106,6 +109,7 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 
 	users, resp, err := client.User.ListUsers(ctx, &input)
 	if err != nil {
+		logger.Error("listOktaUsers", "list users", err)
 		return nil, err
 	}
 
@@ -118,6 +122,7 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 		var nextUserSet []*okta.User
 		resp, err = resp.Next(ctx, &nextUserSet)
 		if err != nil {
+			logger.Error("listOktaUsers", "list user paging", err)
 			return nil, err
 		}
 		for _, user := range nextUserSet {
@@ -156,15 +161,18 @@ func getOktaUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 }
 
 func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	logger.Debug("listUserGroups")
 	user := h.Item.(*okta.User)
-	plugin.Logger(ctx).Debug("listUserGroups")
 	client, err := Connect(ctx, d)
 	if err != nil {
+		logger.Error("listUserGroups", "connect", err)
 		return nil, err
 	}
 
 	groups, resp, err := client.User.ListUserGroups(ctx, user.Id)
 	if err != nil {
+		logger.Error("listUserGroups", "list user groups", err)
 		return nil, err
 	}
 
@@ -172,12 +180,42 @@ func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 		var nextGroupSet []*okta.Group
 		resp, err = resp.Next(ctx, &nextGroupSet)
 		if err != nil {
+			logger.Error("listUserGroups", "list user groups paging", err)
 			return nil, err
 		}
 		groups = append(groups, nextGroupSet...)
 	}
 
 	return groups, nil
+}
+
+func listAssignedRolesForUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	logger.Debug("listAssignedRolesForUser")
+	user := h.Item.(*okta.User)
+	client, err := Connect(ctx, d)
+	if err != nil {
+		logger.Error("listUserGroups", "connect", err)
+		return nil, err
+	}
+
+	roles, resp, err := client.User.ListAssignedRolesForUser(ctx, user.Id, &query.Params{})
+	if err != nil {
+		logger.Error("listUserGroups", "list assigned roles for user", err)
+		return nil, err
+	}
+
+	for resp.HasNextPage() {
+		var nextRolesSet []*okta.Role
+		resp, err = resp.Next(ctx, &nextRolesSet)
+		if err != nil {
+			logger.Error("listUserGroups", "list assigned roles for user paging", err)
+			return nil, err
+		}
+		roles = append(roles, nextRolesSet...)
+	}
+
+	return roles, nil
 }
 
 //// TRANSFORM FUNCTION
