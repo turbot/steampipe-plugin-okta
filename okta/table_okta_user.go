@@ -41,14 +41,14 @@ func tableOktaUser() *plugin.Table {
 		},
 
 		Columns: []*plugin.Column{
-			// top columns
+			// Top Columns
 			{Name: "login", Type: proto.ColumnType_STRING, Transform: transform.From(userProfile), Description: "Unique identifier for the user (username)."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for user."},
 			{Name: "email", Type: proto.ColumnType_STRING, Transform: transform.From(userProfile), Description: "Primary email address of user."},
 			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when user was created."},
 			{Name: "filter", Type: proto.ColumnType_STRING, Transform: transform.FromQual("filter"), Description: "Filter string to [filter](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter) users. Input filter query should not be encoded."},
 
-			// other columns
+			// Other Columns
 			{Name: "activated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when transition to ACTIVE status completed."},
 			{Name: "last_login", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp of last login."},
 			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when user was last updated."},
@@ -58,7 +58,7 @@ func tableOktaUser() *plugin.Table {
 			{Name: "status_changed", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when status last changed."},
 			{Name: "transitioning_to_status", Type: proto.ColumnType_STRING, Description: "Target status of an in-progress asynchronous status transition."},
 
-			// JSON columns
+			// JSON Columns
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "User profile properties."},
 			{Name: "type", Type: proto.ColumnType_JSON, Description: "User type that determines the schema for the user's profile."},
 			{Name: "user_groups", Type: proto.ColumnType_JSON, Hydrate: listUserGroups, Transform: transform.From(transformUserGroups), Description: "List of groups of which the user is a member."},

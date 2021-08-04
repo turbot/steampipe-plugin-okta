@@ -37,21 +37,20 @@ func tableOktaGroup() *plugin.Table {
 				{Name: "last_membership_updated", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
-
 		Columns: []*plugin.Column{
-			// top columns
+			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Name"), Description: "Name of the Group."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
 			{Name: "description", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Description"), Description: "Description of the Group."},
 			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group was created."},
 
-			// other columns
+			// Other Columns
 			{Name: "filter", Type: proto.ColumnType_STRING, Transform: transform.FromQual("filter"), Description: "Filter string to [filter](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter) users. Input filter query should not be encoded."},
 			{Name: "last_membership_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group's memberships were last updated."},
 			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group's profile was last updated."},
 			{Name: "type", Type: proto.ColumnType_STRING, Description: "Determines how a Group's Profile and memberships are managed. Can be one of OKTA_GROUP, APP_GROUP or BUILT_IN."},
 
-			// JSON columns
+			// JSON Columns
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "The Group's Profile properties."},
 			{Name: "object_class", Type: proto.ColumnType_JSON, Description: "Determines the Group's profile."},
 			{Name: "group_members", Type: proto.ColumnType_JSON, Hydrate: listGroupMembers, Transform: transform.From(transformGroupMembers), Description: "List of all users that are a member of this Group."},

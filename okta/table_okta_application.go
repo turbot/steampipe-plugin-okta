@@ -36,19 +36,19 @@ func tableOktaApplication() *plugin.Table {
 		},
 
 		Columns: []*plugin.Column{
-			// top columns
+			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Unique key for app definition."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for app."},
 			{Name: "label", Type: proto.ColumnType_STRING, Description: "User-defined display name for app."},
 			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when user was created."},
 			{Name: "filter", Type: proto.ColumnType_STRING, Transform: transform.FromQual("filter"), Description: "Filter string to [filter](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter) users. Input filter query should not be encoded."},
 
-			// other columns
+			// Other Columns
 			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when app was last updated."},
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "Current status of app. Valid values are ACTIVE or INACTIVE."},
 			{Name: "signOnMode", Type: proto.ColumnType_STRING, Description: "Authentication mode of app. Can be one of AUTO_LOGIN, BASIC_AUTH, BOOKMARK, BROWSER_PLUGIN, Custom, OPENID_CONNECT, SAML_1_1, SAML_2_0, SECURE_PASSWORD_STORE and WS_FEDERATION."},
 
-			// JSON columns
+			// JSON Columns
 			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings for app."},
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "Valid JSON schema for specifying properties."},
 			{Name: "visibility", Type: proto.ColumnType_JSON, Description: "Visibility settings for app."},
