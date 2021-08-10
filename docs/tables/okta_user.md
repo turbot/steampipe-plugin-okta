@@ -38,6 +38,30 @@ from
   okta_user;
 ```
 
+### Get asssigned role details for users
+
+```sql
+select
+  id,
+  login,
+  jsonb_pretty(assigned_roles)
+from
+  okta_user
+```
+
+### List users with SUPER_ADMIN role access
+
+```sql
+select
+  id,
+  login,
+  jsonb_pretty(assigned_roles)
+from
+  okta_user
+where
+  assigned_roles @> '[{"type":"SUPER_ADMIN"} ]'::jsonb;
+```
+
 ### Users who have not logged in for more than 30 days
 
 ```sql
