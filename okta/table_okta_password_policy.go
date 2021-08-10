@@ -37,7 +37,7 @@ func listOktaPasswordPolicies(ctx context.Context, d *plugin.QueryData, _ *plugi
 		logger.Error("listOktaPolicies", "connect", err)
 		return nil, err
 	}
-	logger.Error("listOktaPolicies", "TABLE NAME", d.Table.Name)
+
 	if d.Table.Name == "okta_password_policy" {
 		input.Type = "PASSWORD"
 		input.Expand = "rules"
