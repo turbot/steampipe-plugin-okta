@@ -19,7 +19,7 @@ import (
 func tableOktaPolicy() *plugin.Table {
 	return &plugin.Table{
 		Name:        "okta_policy",
-		Description: "An Okta organization (org) is a root object and a container for all other Okta objects. It contains resources such as users, groups, and applications, as well as policy and configurations for your Okta environment.",
+		Description: "Policies control settings for different operations.",
 		List: &plugin.ListConfig{
 			KeyColumns: plugin.SingleColumn("type"),
 			Hydrate:    listOktaPolicies,
@@ -59,22 +59,19 @@ func listOktaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrat
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 
-	input := &query.Params{}
+	input := &query.Params{
+		Expand: "rules",
+	}
 	if err != nil {
 		logger.Error("listOktaPolicies", "connect", err)
 		return nil, err
 	}
-	if d.Table.Name == "okta_sign_on_policy" {
-		input.Type = "OKTA_SIGN_ON"
-		input.Expand = "rules"
-	}
 
 	policyType := d.KeyColumnQuals["type"].GetStringValue()
-	if input == nil && policyType == "" {
+	if policyType == "" {
 		return nil, nil
-	} else {
-		policyType = input.Type
 	}
+	input.Type = policyType
 
 	if !helpers.StringSliceContains(policyTypes, policyType) {
 		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))

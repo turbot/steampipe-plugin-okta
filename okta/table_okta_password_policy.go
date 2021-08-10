@@ -23,7 +23,7 @@ func tableOktaPasswordPolicy() *plugin.Table {
 			Hydrate: listOktaPasswordPolicies,
 		},
 		Columns: policyColumns([]*plugin.Column{
-			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings of the Policy."},
+			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings of the password policy."},
 		}),
 	}
 }
