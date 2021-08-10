@@ -65,7 +65,7 @@ steampipe plugin install okta
 Installing the latest okta plugin will create a config file (~/.steampipe/config/okta.spc) with a single connection named okta:
 
 ```hcl
-# connection "okta" {
+connection "okta" {
   plugin = "okta"
 
   # 1. With API TOKEN(https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/)

@@ -63,6 +63,9 @@ func tableOktaUser() *plugin.Table {
 			{Name: "type", Type: proto.ColumnType_JSON, Description: "User type that determines the schema for the user's profile."},
 			{Name: "user_groups", Type: proto.ColumnType_JSON, Hydrate: listUserGroups, Transform: transform.From(transformUserGroups), Description: "List of groups of which the user is a member."},
 			{Name: "assigned_roles", Type: proto.ColumnType_JSON, Hydrate: listAssignedRolesForUser, Transform: transform.FromValue(), Description: "List of roles assigned to user."},
+
+			// Steampipe Columns
+			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("login"), Description: titleDescription},
 		},
 	}
 }
@@ -143,6 +146,10 @@ func getOktaUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 		userId = h.Item.(*okta.User).Id
 	} else {
 		userId = d.KeyColumnQuals["id"].GetStringValue()
+	}
+
+	if userId == "" {
+		return nil, nil
 	}
 
 	client, err := Connect(ctx, d)

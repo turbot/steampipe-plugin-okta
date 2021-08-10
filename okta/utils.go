@@ -7,7 +7,10 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
 
-const filterTimeFormat = "2006-01-02T15:04:05.000Z"
+const (
+	filterTimeFormat = "2006-01-02T15:04:05.000Z"
+	titleDescription = "The title of the resource."
+)
 
 var (
 	// Filters sympol - comparison operator map for okta

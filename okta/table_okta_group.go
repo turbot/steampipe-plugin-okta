@@ -54,6 +54,9 @@ func tableOktaGroup() *plugin.Table {
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "The Group's Profile properties."},
 			{Name: "object_class", Type: proto.ColumnType_JSON, Description: "Determines the Group's profile."},
 			{Name: "group_members", Type: proto.ColumnType_JSON, Hydrate: listGroupMembers, Transform: transform.From(transformGroupMembers), Description: "List of all users that are a member of this Group."},
+
+			// Steampipe Columns
+			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
 		},
 	}
 }
@@ -135,6 +138,10 @@ func getOktaGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDat
 		groupId = h.Item.(*okta.Group).Id
 	} else {
 		groupId = d.KeyColumnQuals["id"].GetStringValue()
+	}
+
+	if groupId == "" {
+		return nil, nil
 	}
 
 	client, err := Connect(ctx, d)

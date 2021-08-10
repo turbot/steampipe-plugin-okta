@@ -46,7 +46,7 @@ func tableOktaApplication() *plugin.Table {
 			// Other Columns
 			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when app was last updated."},
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "Current status of app. Valid values are ACTIVE or INACTIVE."},
-			{Name: "signOnMode", Type: proto.ColumnType_STRING, Description: "Authentication mode of app. Can be one of AUTO_LOGIN, BASIC_AUTH, BOOKMARK, BROWSER_PLUGIN, Custom, OPENID_CONNECT, SAML_1_1, SAML_2_0, SECURE_PASSWORD_STORE and WS_FEDERATION."},
+			{Name: "sign_on_mode", Type: proto.ColumnType_STRING, Description: "Authentication mode of app. Can be one of AUTO_LOGIN, BASIC_AUTH, BOOKMARK, BROWSER_PLUGIN, Custom, OPENID_CONNECT, SAML_1_1, SAML_2_0, SECURE_PASSWORD_STORE and WS_FEDERATION."},
 
 			// JSON Columns
 			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings for app."},
@@ -54,6 +54,9 @@ func tableOktaApplication() *plugin.Table {
 			{Name: "visibility", Type: proto.ColumnType_JSON, Description: "Visibility settings for app."},
 			{Name: "credentials", Type: proto.ColumnType_JSON, Description: "Credentials for the specified signOnMode."},
 			{Name: "accessibility", Type: proto.ColumnType_JSON, Description: "Access settings for app."},
+
+			// Steampipe Columns
+			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
 		},
 	}
 }
@@ -124,6 +127,10 @@ func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 		appId = h.Item.(*okta.Application).Id
 	} else {
 		appId = d.KeyColumnQuals["id"].GetStringValue()
+	}
+
+	if appId == "" {
+		return nil, nil
 	}
 
 	client, err := Connect(ctx, d)
