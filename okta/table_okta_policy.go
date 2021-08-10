@@ -41,6 +41,7 @@ func tableOktaPolicy() *plugin.Table {
 			// JSON Columns
 			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
 			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Priority of the Policy."},
+			{Name: "data", Type: proto.ColumnType_JSON, Transform: transform.FromValue(), Description: "Priority of the Policy."},
 		},
 	}
 }
@@ -64,7 +65,7 @@ func listOktaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrat
 		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))
 	}
 
-	policies, resp, err := client.Policy.ListPolicies(ctx, &query.Params{Type: policyType})
+	policies, resp, err := client.Policy.ListPolicies(ctx, &query.Params{Type: policyType, Expand: "rules"})
 	if err != nil {
 		logger.Error("listOktaPolicies", "list policies", err)
 		return nil, err
