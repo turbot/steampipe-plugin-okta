@@ -8,25 +8,64 @@
 
 ```sql
 select
-  display_name,
-  user_principal_name,
+  name,
   id,
-  given_name,
-  mail
+  created,
+  status,
+  priority,
+  system,
+  jsonb_pretty(rules) as rules
 from
-  okta_sign_on_policy;
+  okta_sign_on_policy
+order by
+  priority;
 ```
 
-### List guest users
+### List custom sign on policies
 
 ```sql
 select
-  display_name,
-  user_principal_name,
+  name,
   id,
-  mail
+  created,
+  status,
+  priority,
+  system
 from
   okta_sign_on_policy
 where
-  user_type = 'Guest';
+  not system;
+```
+
+### List inactive sign on policies
+
+```sql
+select
+  name,
+  id,
+  created,
+  status,
+  priority,
+  system
+from
+  okta_sign_on_policy
+where
+  status = 'INACTIVE';
+```
+
+### Get sign on policy rules details
+
+```sql
+select
+  name,
+  id,
+  r -> 'name' as rule_name,
+  r -> 'system' as rule_system,
+  r -> 'status' as rule_status,
+  r -> 'priority' as rule_priority,
+  jsonb_pretty(r -> 'actions') as rule_actions,
+  jsonb_pretty(r -> 'conditions') as rule_conditions
+from
+  okta_sign_on_policy,
+  jsonb_array_elements(rules) as r;
 ```

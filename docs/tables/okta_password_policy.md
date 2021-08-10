@@ -36,7 +36,7 @@ where
   system;
 ```
 
-### List inactive policies
+### List inactive password policies
 
 ```sql
 select
@@ -68,7 +68,7 @@ from
   okta_password_policy;
 ```
 
-### Get policy password rules details
+### Get password policy rules details
 
 ```sql
 select
@@ -79,7 +79,7 @@ select
   r -> 'status' as rule_status,
   r -> 'priority' as rule_priority,
   jsonb_pretty(r -> 'actions') as rule_actions,
-  jsonb_pretty(r -> 'priority') as rule_conditions
+  jsonb_pretty(r -> 'conditions') as rule_conditions
 from
   okta_password_policy,
   jsonb_array_elements(rules) as r;
