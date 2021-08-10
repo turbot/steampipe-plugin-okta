@@ -24,25 +24,32 @@ func tableOktaPolicy() *plugin.Table {
 			KeyColumns: plugin.SingleColumn("type"),
 			Hydrate:    listOktaPolicies,
 		},
-		Columns: []*plugin.Column{
-			// Top Columns
-			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
-			{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
-			{Name: "description", Type: proto.ColumnType_STRING, Description: "Description of the Policy."},
-			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was created."},
-			{Name: "type", Type: proto.ColumnType_STRING, Transform: transform.FromQual("type"), Description: "Specifies the type of Policy. Valid values: OKTA_SIGN_ON, PASSWORD, MFA_ENROLL or IDP_DISCOVERY."},
+		Columns: policyColumns([]*plugin.Column{}),
+	}
+}
 
-			// Other Columns
-			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was last modified."},
-			{Name: "priority", Type: proto.ColumnType_INT, Description: "Priority of the Policy."},
-			{Name: "status", Type: proto.ColumnType_STRING, Description: "Status of the Policy: ACTIVE or INACTIVE."},
-			{Name: "system", Type: proto.ColumnType_BOOL, Description: "This is set to true on system policies, which cannot be deleted."},
+func policyColumns(columns []*plugin.Column) []*plugin.Column {
+	return append(commonPolicyColumns(), columns...)
+}
 
-			// JSON Columns
-			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
-			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Priority of the Policy."},
-			{Name: "data", Type: proto.ColumnType_JSON, Transform: transform.FromValue(), Description: "Priority of the Policy."},
-		},
+func commonPolicyColumns() []*plugin.Column {
+	return []*plugin.Column{
+		// Top Columns
+		{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
+		{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
+		{Name: "description", Type: proto.ColumnType_STRING, Description: "Description of the Policy."},
+		{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was created."},
+		{Name: "type", Type: proto.ColumnType_STRING, Description: "Specifies the type of Policy. Valid values: OKTA_SIGN_ON, PASSWORD, MFA_ENROLL or IDP_DISCOVERY."},
+
+		// Other Columns
+		{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was last modified."},
+		{Name: "priority", Type: proto.ColumnType_INT, Description: "Priority of the Policy."},
+		{Name: "status", Type: proto.ColumnType_STRING, Description: "Status of the Policy: ACTIVE or INACTIVE."},
+		{Name: "system", Type: proto.ColumnType_BOOL, Description: "This is set to true on system policies, which cannot be deleted."},
+
+		// JSON Columns
+		{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
+		{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromField("Embedded.rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
 	}
 }
 
@@ -51,21 +58,29 @@ func tableOktaPolicy() *plugin.Table {
 func listOktaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
+
+	input := &query.Params{}
 	if err != nil {
 		logger.Error("listOktaPolicies", "connect", err)
 		return nil, err
 	}
+	if d.Table.Name == "okta_sign_on_policy" {
+		input.Type = "OKTA_SIGN_ON"
+		input.Expand = "rules"
+	}
 
 	policyType := d.KeyColumnQuals["type"].GetStringValue()
-	if policyType == "" {
+	if input == nil && policyType == "" {
 		return nil, nil
+	} else {
+		policyType = input.Type
 	}
 
 	if !helpers.StringSliceContains(policyTypes, policyType) {
 		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))
 	}
 
-	policies, resp, err := client.Policy.ListPolicies(ctx, &query.Params{Type: policyType, Expand: "rules"})
+	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
 		logger.Error("listOktaPolicies", "list policies", err)
 		return nil, err
