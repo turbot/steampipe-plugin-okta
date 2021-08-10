@@ -1,4 +1,4 @@
-# connection "okta" {
+connection "okta" {
   plugin = "okta"
 
   # 1. With API TOKEN(https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/)
