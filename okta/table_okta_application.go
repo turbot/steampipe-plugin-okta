@@ -54,6 +54,9 @@ func tableOktaApplication() *plugin.Table {
 			{Name: "visibility", Type: proto.ColumnType_JSON, Description: "Visibility settings for app."},
 			{Name: "credentials", Type: proto.ColumnType_JSON, Description: "Credentials for the specified signOnMode."},
 			{Name: "accessibility", Type: proto.ColumnType_JSON, Description: "Access settings for app."},
+
+			// Steampipe Columns
+			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
 		},
 	}
 }
@@ -124,6 +127,10 @@ func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 		appId = h.Item.(*okta.Application).Id
 	} else {
 		appId = d.KeyColumnQuals["id"].GetStringValue()
+	}
+
+	if appId == "" {
+		return nil, nil
 	}
 
 	client, err := Connect(ctx, d)
