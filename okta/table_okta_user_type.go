@@ -15,7 +15,7 @@ import (
 func tableOktaUserType() *plugin.Table {
 	return &plugin.Table{
 		Name:        "okta_user_type",
-		Description: "Represents an Okta user account.",
+		Description: "Represents an Okta profile types.",
 		Get: &plugin.GetConfig{
 			Hydrate:           getOktaUserType,
 			KeyColumns:        plugin.SingleColumn("id"),
