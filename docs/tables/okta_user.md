@@ -1,5 +1,7 @@
 # Table: okta_user
 
+Note: This table supports optional `filter` column to query results based on okta supported [filters](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter).
+
 ## Examples
 
 ### Basic info
@@ -55,7 +57,7 @@ from
 select
   id,
   login,
-  jsonb_pretty(assigned_roles)
+  jsonb_pretty(assigned_roles) as assigned_roles
 from
   okta_user
 where
@@ -72,7 +74,7 @@ select
 from
   okta_user
 where
-  last_login < current_timestamp - interval '1 days';
+  last_login < current_timestamp - interval '30 days';
 ```
 
 ### List users using [filter](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter)

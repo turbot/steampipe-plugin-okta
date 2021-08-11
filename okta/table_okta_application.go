@@ -88,7 +88,7 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 	}
 
 	if input.Filter != "" {
-		plugin.Logger(ctx).Error("Filter", "input.Filter", input.Filter)
+		plugin.Logger(ctx).Debug("Filter", "input.Filter", input.Filter)
 	}
 
 	applications, resp, err := client.Application.ListApplications(ctx, &input)
