@@ -27,8 +27,6 @@ func tableOktaGroup() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOktaGroups,
 			KeyColumns: plugin.KeyColumnSlice{
-				// https://developer.okta.com/docs/reference/api/groups/#filters
-				// https://developer.okta.com/docs/reference/api-overview/#filter
 				// Key fields
 				{Name: "id", Require: plugin.Optional},
 				{Name: "type", Require: plugin.Optional},
@@ -98,7 +96,7 @@ func listOktaGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 	}
 
 	if input.Filter != "" {
-		plugin.Logger(ctx).Error("Filter", "input.Filter", input.Filter)
+		plugin.Logger(ctx).Debug("Filter", "input.Filter", input.Filter)
 	}
 
 	groups, resp, err := client.Group.ListGroups(ctx, &input)

@@ -107,7 +107,7 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	}
 
 	if input.Filter != "" {
-		plugin.Logger(ctx).Error("Filter", "input.Filter", input.Filter)
+		plugin.Logger(ctx).Debug("Filter", "input.Filter", input.Filter)
 	}
 
 	users, resp, err := client.User.ListUsers(ctx, &input)

@@ -2,7 +2,7 @@
 
 Application are web-based services that provide any number of specific tasks that require user authentication.
 
-Note: This table supports optional `filter` column to query results based on okta supported [filters](<(https://developer.okta.com/docs/reference/api/apps/#filters)>).
+Note: This table supports optional `filter` column to query results based on okta supported [filters](https://developer.okta.com/docs/reference/api/apps/#filters).
 
 ## Examples
 
