@@ -2,7 +2,7 @@
 organization: Turbot
 category: ["saas"]
 icon_url: "/images/plugins/turbot/okta.svg"
-brand_color: "#0089D6"
+brand_color: "#00297A"
 display_name: "Okta"
 name: "okta"
 description: "Steampipe plugin for querying resource users, groups, applications and more from Okta."
