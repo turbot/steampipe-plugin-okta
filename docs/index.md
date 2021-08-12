@@ -53,12 +53,12 @@ steampipe plugin install okta
 
 ### Credentials
 
-| Item        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Credentials | Okta requires an [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) and domain for all requests.                                                                                                                                                                                                                                                                                                                                                                                      |
-| Permissions | API tokens have the same permissions as the user who creates them, and if the user permissions change, the API token permissions also change.                                                                                                                                                                                                                                                                                                                                                                                |
-| Radius      | Each connection represents a single Okta Organization.                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Resolution  | 1. With configuration provided in connection in steampipe _**.spc**_ config file.<br /> a) [API Token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/)<br /> b) [Private Key](https://github.com/okta/okta-sdk-golang#oauth-20)<br />2. With okta environment variables.<br />3. An okta.yaml file in a .okta folder in the current user's home directory _**(~/.okta/okta.yaml or %userprofile\.okta\okta.yaml)**_.<br />4. A .okta.yaml file in the application or project's root directory. |
+| Item        | Description                                                                                                                                                                                                                                                            |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Credentials | Okta requires an [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) and domain for all requests.                                                                                                                                |
+| Permissions | API tokens have the same permissions as the user who creates them, and if the user permissions change, the API token permissions also change.                                                                                                                          |
+| Radius      | Each connection represents a single Okta Organization.                                                                                                                                                                                                                 |
+| Resolution  | 1. With configuration provided in connection in steampipe _**.spc**_ config file.<br />2. With okta environment variables.<br />3. An okta.yaml file in a .okta folder in the current user's home directory _**(~/.okta/okta.yaml or %userprofile\.okta\okta.yaml)**_. |
 
 ### Configuration
 
@@ -71,12 +71,6 @@ connection "okta" {
   # 1. With API TOKEN(https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/)
   # domain = "https://<your_okta_domain>.okta.com"
   # token  = "this_not_real_token"
-
-
-  # 2. With Private Key(https://github.com/okta/okta-sdk-golang#oauth-20)
-  # domain      = "https://<your_okta_domain>.okta.com"
-  # client_id   = "your_client_id"
-  # private_key = "----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAmyX8wdrHK1ycOMeXNg3NOMQvebnfQp+3L5OaaiX16/+tLbwb\nJTZDYh0EXLySMVsduRxC/1PQdPuI6x50TdkoB3C4JMuU968uJqkFp7fXXy5SMAej\nHAyF67cY51dx15ztvakRNJPhhI5WaC20RfR/eow0IH5lGI3czcvTCChGau5qLue3\nHqNDYFY+U3xhOlavSDdtmuxpIFsDycn/OjYjsV4lzyRrOArqtVV/kXHKx04T6A1x\nSc99999999999999999999999999999999999999999999999999EGekHlUAIUpw\n-----END RSA PRIVATE KEY-----"
 }
 ```
 
@@ -91,19 +85,11 @@ By default, all options are commented out in the default connection, thus Steamp
 
 ### Credentials from Environment Variables
 
-The Okta plugin will use the standard Okta environment variables to obtain credentials **only if other arguments (`domain`, `token`, `client_id`, `private_key`) are not specified** in the connection:
+The Okta plugin will use the standard Okta environment variables to obtain credentials **only if other arguments (`domain`, `token`) are not specified** in the connection:
 
 #### API Token
 
 ```sh
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
 export OKTA_CLIENT_TOKEN=this_not_real_token
-```
-
-#### Private Key
-
-```sh
-export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
-export OKTA_CLIENT_CLIENTID=your_client_id
-export OKTA_CLIENT_PRIVATEKEY="----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAmyX8wdrHK1ycOMeXNg3NOMQvebnfQp+3L5OaaiX16/+tLbwb\nJTZDYh0EXLySMVsduRxC/1PQdPuI6x50TdkoB3C4JMuU968uJqkFp7fXXy5SMAej\nHAyF67cY51dx15ztvakRNJPhhI5WaC20RfR/eow0IH5lGI3czcvTCChGau5qLue3\nHqNDYFY+U3xhOlavSDdtmuxpIFsDycn/OjYjsV4lzyRrOArqtVV/kXHKx04T6A1x\nSc99999999999999999999999999999999999999999999999999EGekHlUAIUpw\n-----END RSA PRIVATE KEY-----"
 ```
