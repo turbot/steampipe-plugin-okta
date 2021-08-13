@@ -30,8 +30,6 @@ func tableOktaApplication() *plugin.Table {
 				{Name: "name", Require: plugin.Optional},
 				{Name: "status", Require: plugin.Optional},
 				{Name: "filter", Require: plugin.Optional},
-				// Add examples in docs to get applications assigned to a specific user or group by using filter group.id or user.id
-				// select * from okta_application where filter = 'user.id eq "00u1e5eizrjQKTWMA5d7"'
 			},
 		},
 
