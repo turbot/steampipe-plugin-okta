@@ -1,5 +1,3 @@
-# steampipe-plugin-okta
-
 ![image](https://hub.steampipe.io/images/plugins/turbot/okta-social-graphic.png)
 
 # Okta Plugin for Steampipe
