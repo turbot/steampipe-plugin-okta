@@ -65,7 +65,7 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaUsers", "connect", err)
+		logger.Error("listOktaApplications", "connect", err)
 		return nil, err
 	}
 
@@ -101,7 +101,7 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 
 	// paging
 	for resp.HasNextPage() {
-		var nextApplicationSet []*okta.App
+		var nextApplicationSet []*okta.Application
 		resp, err = resp.Next(ctx, &nextApplicationSet)
 		if err != nil {
 			logger.Error("listOktaApplications", "list application paging", err)
