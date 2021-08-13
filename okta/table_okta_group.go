@@ -35,6 +35,12 @@ func tableOktaGroup() *plugin.Table {
 				{Name: "last_membership_updated", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
+		HydrateConfig: []plugin.HydrateConfig{
+			{
+				Func:           listGroupMembers,
+				MaxConcurrency: 10,
+			},
+		},
 		Columns: []*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Name"), Description: "Name of the Group."},

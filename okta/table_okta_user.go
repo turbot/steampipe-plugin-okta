@@ -39,7 +39,16 @@ func tableOktaUser() *plugin.Table {
 				{Name: "last_updated", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
-
+		HydrateConfig: []plugin.HydrateConfig{
+			{
+				Func:           listUserGroups,
+				MaxConcurrency: 10,
+			},
+			{
+				Func:           listAssignedRolesForUser,
+				MaxConcurrency: 10,
+			},
+		},
 		Columns: []*plugin.Column{
 			// Top Columns
 			{Name: "login", Type: proto.ColumnType_STRING, Transform: transform.From(userProfile), Description: "Unique identifier for the user (username)."},
@@ -211,7 +220,7 @@ func listAssignedRolesForUser(ctx context.Context, d *plugin.QueryData, h *plugi
 
 	roles, resp, err := client.User.ListAssignedRolesForUser(ctx, user.Id, &query.Params{})
 	if err != nil {
-		logger.Error("listUserGroups", "list assigned roles for user", err)
+		logger.Error("listAssignedRolesForUser", "list assigned roles for user", err)
 		return nil, err
 	}
 
@@ -219,7 +228,7 @@ func listAssignedRolesForUser(ctx context.Context, d *plugin.QueryData, h *plugi
 		var nextRolesSet []*okta.Role
 		resp, err = resp.Next(ctx, &nextRolesSet)
 		if err != nil {
-			logger.Error("listUserGroups", "list assigned roles for user paging", err)
+			logger.Error("listAssignedRolesForUser", "list assigned roles for user paging", err)
 			return nil, err
 		}
 		roles = append(roles, nextRolesSet...)

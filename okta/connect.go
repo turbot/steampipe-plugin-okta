@@ -31,7 +31,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 	}
 
 	if domain != "" && token != "" {
-		_, client, err := okta.NewClient(ctx, okta.WithOrgUrl(domain), okta.WithToken(token), okta.WithRequestTimeout(15), okta.WithRateLimitMaxRetries(5))
+		_, client, err := okta.NewClient(ctx, okta.WithOrgUrl(domain), okta.WithToken(token), okta.WithRequestTimeout(30), okta.WithRateLimitMaxRetries(5))
 		if err != nil {
 			return nil, err
 		}
