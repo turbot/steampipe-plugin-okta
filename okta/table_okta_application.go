@@ -92,6 +92,9 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 	applications, resp, err := client.Application.ListApplications(ctx, &input)
 	if err != nil {
 		logger.Error("listOktaApplications", "list application", err)
+		if strings.Contains(err.Error(), "Not found") {
+			return nil, nil
+		}
 		return nil, err
 	}
 

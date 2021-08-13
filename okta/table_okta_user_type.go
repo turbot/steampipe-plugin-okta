@@ -2,6 +2,7 @@ package okta
 
 import (
 	"context"
+	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -58,6 +59,9 @@ func listOktaUserTypes(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 	userTypes, resp, err := client.UserType.ListUserTypes(ctx)
 	if err != nil {
 		logger.Error("listOktaUserTypes", "list users", err)
+		if strings.Contains(err.Error(), "Not found") {
+			return nil, nil
+		}
 		return nil, err
 	}
 

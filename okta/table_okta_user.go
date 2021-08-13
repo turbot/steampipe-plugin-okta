@@ -180,6 +180,9 @@ func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	groups, resp, err := client.User.ListUserGroups(ctx, user.Id)
 	if err != nil {
 		logger.Error("listUserGroups", "list user groups", err)
+		if strings.Contains(err.Error(), "Not found") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
