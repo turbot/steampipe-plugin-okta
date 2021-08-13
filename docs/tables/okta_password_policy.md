@@ -52,7 +52,7 @@ where
   status = 'INACTIVE';
 ```
 
-### Get policy password settings details guest users
+### Get policy details for each password policy
 
 ```sql
 select
@@ -68,7 +68,7 @@ from
   okta_password_policy;
 ```
 
-### Get password policy rules details
+### Get rules details for each password policy
 
 ```sql
 select
