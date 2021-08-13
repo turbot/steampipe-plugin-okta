@@ -1,6 +1,8 @@
 # Table: okta_user
 
-Note: This table supports optional `filter` column to query results based on okta supported [filters](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter).
+A user can be granted access to applications, devices, and groups.
+
+Note: This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter).
 
 ## Examples
 
@@ -18,37 +20,17 @@ from
   okta_user;
 ```
 
-### Get profile properties of users
+### Get profile, group, and assigned role details for each user
 
 ```sql
 select
   id,
   email,
-  jsonb_pretty(profile) as profile
+  jsonb_pretty(profile) as profile,
+  jsonb_pretty(user_groups) as user_groups,
+  jsonb_pretty(assigned_roles) as assigned_roles
 from
   okta_user;
-```
-
-### Get groups details for users
-
-```sql
-select
-  id,
-  email,
-  jsonb_pretty(user_groups) as user_groups
-from
-  okta_user;
-```
-
-### Get asssigned role details for users
-
-```sql
-select
-  id,
-  login,
-  jsonb_pretty(assigned_roles)
-from
-  okta_user
 ```
 
 ### List users with SUPER_ADMIN role access
@@ -64,7 +46,7 @@ where
   assigned_roles @> '[{"type":"SUPER_ADMIN"} ]'::jsonb;
 ```
 
-### Users who have not logged in for more than 30 days
+### List users who have not logged in for more than 30 days
 
 ```sql
 select
@@ -77,7 +59,7 @@ where
   last_login < current_timestamp - interval '30 days';
 ```
 
-### List users using [filter](https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter)
+### List active users that have been last updated before a specific date using a filter
 
 ```sql
 select

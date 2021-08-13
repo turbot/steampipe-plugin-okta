@@ -68,9 +68,9 @@ Installing the latest okta plugin will create a config file (~/.steampipe/config
 connection "okta" {
   plugin = "okta"
 
-  # 1. With API TOKEN(https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/)
+  # Get your API token from Okta https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/
   # domain = "https://<your_okta_domain>.okta.com"
-  # token  = "this_not_real_token"
+  # token  = "02d0YZgNSJwlNew6lZG-6qGThisisatest-token"
 }
 ```
 
@@ -91,5 +91,5 @@ The Okta plugin will use the standard Okta environment variables to obtain crede
 
 ```sh
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
-export OKTA_CLIENT_TOKEN=this_not_real_token
+export OKTA_CLIENT_TOKEN=02d0YZgNSJwlNew6lZG-6qGThisisatest-token
 ```

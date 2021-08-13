@@ -1,8 +1,8 @@
 # Table: okta_application
 
-Application are web-based services that provide any number of specific tasks that require user authentication.
+Applications are web-based services that provide any number of specific tasks that require user authentication.
 
-Note: This table supports optional `filter` column to query results based on okta supported [filters](https://developer.okta.com/docs/reference/api/apps/#filters).
+Note: This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/apps/#filters).
 
 ## Examples
 
@@ -20,7 +20,7 @@ from
   okta_application;
 ```
 
-### Get apps with `SAML_2_0` sign_on_mode
+### List SAML 2.0 apps
 
 ```sql
 select
@@ -33,10 +33,10 @@ select
 from
   okta_application
 where
-  sign_on_mode = 'SAML_2_0'
+  sign_on_mode = 'SAML_2_0';
 ```
 
-### List aps assigned to a specific user using [filter](https://developer.okta.com/docs/reference/api/apps/#list-applications-assigned-to-a-user)
+### List apps assigned to a specific user using a filter
 
 ```sql
 select
@@ -46,12 +46,12 @@ select
   sign_on_mode,
   status
 from
-  okta_application as app,
+  okta_application as app
 where
   filter = 'user.id eq "00u1e5eizrjQKTWMA5d7"';
 ```
 
-### List apps assigned to a specific group using [filter](https://developer.okta.com/docs/reference/api/apps/#list-applications-assigned-to-a-group)
+### List apps assigned to a specific group using a filter
 
 ```sql
 select
