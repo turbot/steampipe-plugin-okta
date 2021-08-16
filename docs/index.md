@@ -71,6 +71,13 @@ connection "okta" {
   # Get your API token from Okta https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/
   # domain = "https://<your_okta_domain>.okta.com"
   # token  = "02d0YZgNSJwlNew6lZG-6qGThisisatest-token"
+
+  # OR
+
+  # Use an okta application and the client_credentials flow for authenticating: https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/
+  # domain = "https://<your_okta_domain>.okta.com"
+  # client_id = "OKTA APPLICATION CLIENT ID"
+  # private_key = PEM ENCODED RSA PRIVATE KEY STRING
 }
 ```
 
@@ -92,4 +99,12 @@ The Okta plugin will use the standard Okta environment variables to obtain crede
 ```sh
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
 export OKTA_CLIENT_TOKEN=02d0YZgNSJwlNew6lZG-6qGThisisatest-token
+```
+
+OR
+
+```sh
+export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
+export OKTA_CLIENT_CLIENTID=0oa10zpa2bo6tAm9z1p4
+export OKTA_CLIENT_PRIVATEKEY="-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 ```
