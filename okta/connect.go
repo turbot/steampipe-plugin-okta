@@ -18,7 +18,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 	oktaConfig := GetConfig(d.Connection)
 
 	var domain, token, clientID, privateKey string
-	scopes := []string{"okta.users.read", "okta.groups.read", "okta.roles.read"}
+	scopes := []string{"okta.users.read", "okta.groups.read", "okta.roles.read", "okta.apps.read", "okta.policies.read"}
 	if oktaConfig.Domain != nil {
 		domain = *oktaConfig.Domain
 	} else {
@@ -53,7 +53,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 	}
 
 	if domain != "" && clientID != "" && privateKey != "" {
-		_, client, err := okta.NewClient(ctx, okta.WithOrgUrl(domain), okta.WithAuthorizationMode("PrivateKey"), okta.WithClientId(clientID), okta.WithScopes(scopes), okta.WithRequestTimeout(15), okta.WithRateLimitMaxRetries(5))
+		_, client, err := okta.NewClient(ctx, okta.WithOrgUrl(domain), okta.WithAuthorizationMode("PrivateKey"), okta.WithClientId(clientID), okta.WithPrivateKey(privateKey), okta.WithScopes(scopes), okta.WithRequestTimeout(15), okta.WithRateLimitMaxRetries(5))
 		if err != nil {
 			return nil, err
 		}

@@ -55,7 +55,7 @@ steampipe plugin install okta
 
 | Item        | Description                                                                                                                                                                                                                                                            |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Credentials | Okta requires an [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) and domain for all requests.                                                                                                                                |
+| Credentials | Okta requires an [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) and domain for all requests OR [a service app and a private key](https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/)      |
 | Permissions | API tokens have the same permissions as the user who creates them, and if the user permissions change, the API token permissions also change.                                                                                                                          |
 | Radius      | Each connection represents a single Okta Organization.                                                                                                                                                                                                                 |
 | Resolution  | 1. With configuration provided in connection in steampipe _**.spc**_ config file.<br />2. With okta environment variables.<br />3. An okta.yaml file in a .okta folder in the current user's home directory _**(~/.okta/okta.yaml or %userprofile\.okta\okta.yaml)**_. |
@@ -82,6 +82,13 @@ connection "okta" {
 ```
 
 By default, all options are commented out in the default connection, thus Steampipe will resolve your credentials using the same order as mentioned in [Credentials](#credentials). This provides a quick way to get started with Steampipe, but you will probably want to customize your experience using configuration options for querying multiple organizations, configuring credentials from your okta configuration files, [environment variables](#credentials-from-environment-variables), etc.
+
+If using the Okta service application, the following scopes must be enabled for steampipe to be able to access the Okta APIs:
+- okta.users.read
+- okta.groups.read
+- okta.apps.read
+- okta.roles.read
+- okta.policies.read
 
 ## Get involved
 
