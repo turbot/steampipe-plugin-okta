@@ -53,12 +53,12 @@ steampipe plugin install okta
 
 ### Credentials
 
-| Item        | Description                                                                                                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Credentials | Okta requires an [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) and domain for all requests OR [a service app and a private key](https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/)      |
-| Permissions | API tokens have the same permissions as the user who creates them, and if the user permissions change, the API token permissions also change.                                                                                                                          |
-| Radius      | Each connection represents a single Okta Organization.                                                                                                                                                                                                                 |
-| Resolution  | 1. With configuration provided in connection in steampipe _**.spc**_ config file.<br />2. With okta environment variables.<br />3. An okta.yaml file in a .okta folder in the current user's home directory _**(~/.okta/okta.yaml or %userprofile\.okta\okta.yaml)**_. |
+| Item        | Description                                                                                                                                                                                                                                                                                 |
+|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Credentials | Okta requires a domain and an [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) or [a service app and private key](https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/) for all requests.                          |
+| Permissions | API tokens have the same permissions as the user who creates them, and if the user permissions change, the API token permissions also change. Service application permissions are based on granted [OAuth scopes](https://developer.okta.com/docs/guides/implement-oauth-for-okta/scopes/). |
+| Radius      | Each connection represents a single Okta Organization.                                                                                                                                                                                                                                      |
+| Resolution  | 1. With configuration provided in connection in steampipe _**.spc**_ config file.<br />2. With okta environment variables.<br />3. An okta.yaml file in a .okta folder in the current user's home directory _**(~/.okta/okta.yaml or %userprofile\.okta\okta.yaml)**_.                      |
 
 ### Configuration
 
@@ -72,18 +72,16 @@ connection "okta" {
   # domain = "https://<your_okta_domain>.okta.com"
   # token  = "02d0YZgNSJwlNew6lZG-6qGThisisatest-token"
 
-  # OR
-
-  # Use an okta application and the client_credentials flow for authenticating: https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/
-  # domain = "https://<your_okta_domain>.okta.com"
-  # client_id = "OKTA APPLICATION CLIENT ID"
-  # private_key = PEM ENCODED RSA PRIVATE KEY STRING
+  # Or use an Okta application and the client credentials flow for authenticating: https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/
+  # domain      = "https://<your_okta_domain>.okta.com"
+  # client_id   = "0oa10zpa2bo6tAm9Test"
+  # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 }
 ```
 
 By default, all options are commented out in the default connection, thus Steampipe will resolve your credentials using the same order as mentioned in [Credentials](#credentials). This provides a quick way to get started with Steampipe, but you will probably want to customize your experience using configuration options for querying multiple organizations, configuring credentials from your okta configuration files, [environment variables](#credentials-from-environment-variables), etc.
 
-If using the Okta service application, the following scopes must be enabled for steampipe to be able to access the Okta APIs:
+If using the Okta service application, the following scopes must be enabled for Steampipe to be able to access the Okta APIs:
 - okta.users.read
 - okta.groups.read
 - okta.apps.read
@@ -99,7 +97,7 @@ If using the Okta service application, the following scopes must be enabled for 
 
 ### Credentials from Environment Variables
 
-The Okta plugin will use the standard Okta environment variables to obtain credentials **only if other arguments (`domain`, `token`) are not specified** in the connection:
+The Okta plugin will use the standard Okta environment variables to obtain credentials **only if other arguments (`domain`, `token`, `client_id`, `private_key`) are not specified** in the connection:
 
 #### API Token
 
@@ -108,10 +106,10 @@ export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
 export OKTA_CLIENT_TOKEN=02d0YZgNSJwlNew6lZG-6qGThisisatest-token
 ```
 
-OR
+#### Service App
 
 ```sh
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
-export OKTA_CLIENT_CLIENTID=0oa10zpa2bo6tAm9z1p4
+export OKTA_CLIENT_CLIENTID=0oa10zpa2bo6tAm9Test
 export OKTA_CLIENT_PRIVATEKEY="-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 ```
