@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -73,7 +72,7 @@ func listOktaMfaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))
 	}
 
-	policies, resp, err := ListMfaPolicies(ctx, *client, input)
+	policies, resp, err := ListPolicies(ctx, *client, input)
 	if err != nil {
 		logger.Error("listOktaMfaPolicies", "list policies", err)
 		return nil, err
@@ -97,44 +96,4 @@ func listOktaMfaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 	}
 
 	return nil, err
-}
-
-// generic policy missing Settings field
-type MfaPolicy struct {
-	Embedded    interface{}                `json:"_embedded,omitempty"`
-	Links       interface{}                `json:"_links,omitempty"`
-	Settings    interface{}                `json:"settings,omitempty"`
-	Conditions  *okta.PolicyRuleConditions `json:"conditions,omitempty"`
-	Created     *time.Time                 `json:"created,omitempty"`
-	Description string                     `json:"description,omitempty"`
-	Id          string                     `json:"id,omitempty"`
-	LastUpdated *time.Time                 `json:"lastUpdated,omitempty"`
-	Name        string                     `json:"name,omitempty"`
-	Priority    int64                      `json:"priority,omitempty"`
-	Status      string                     `json:"status,omitempty"`
-	System      *bool                      `json:"system,omitempty"`
-	Type        string                     `json:"type,omitempty"`
-}
-
-// Gets all mfa policies with the specified type.
-func ListMfaPolicies(ctx context.Context, client okta.Client, qp *query.Params) ([]*MfaPolicy, *okta.Response, error) {
-	url := "/api/v1/policies"
-	if qp != nil {
-		url = url + qp.String()
-	}
-
-	requestExecutor := client.GetRequestExecutor()
-	req, err := requestExecutor.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var policies []*MfaPolicy
-
-	resp, err := requestExecutor.Do(ctx, req, &policies)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return policies, resp, nil
 }

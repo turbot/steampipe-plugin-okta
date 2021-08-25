@@ -73,7 +73,7 @@ func listOktaPasswordPolicies(ctx context.Context, d *plugin.QueryData, _ *plugi
 		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))
 	}
 
-	policies, resp, err := ListPasswordPolicies(ctx, *client, input)
+	policies, resp, err := ListPolicies(ctx, *client, input)
 	if err != nil {
 		logger.Error("listOktaPolicies", "list policies", err)
 		return nil, err
@@ -100,7 +100,7 @@ func listOktaPasswordPolicies(ctx context.Context, d *plugin.QueryData, _ *plugi
 }
 
 // generic policy missing Settings field
-type PasswordPolicy struct {
+type PolicyStructure struct {
 	Embedded    interface{}                `json:"_embedded,omitempty"`
 	Links       interface{}                `json:"_links,omitempty"`
 	Settings    interface{}                `json:"settings,omitempty"`
@@ -116,8 +116,8 @@ type PasswordPolicy struct {
 	Type        string                     `json:"type,omitempty"`
 }
 
-// Gets all password policies with the specified type.
-func ListPasswordPolicies(ctx context.Context, client okta.Client, qp *query.Params) ([]*PasswordPolicy, *okta.Response, error) {
+// Gets all policies with the specified type.
+func ListPolicies(ctx context.Context, client okta.Client, qp *query.Params) ([]*PolicyStructure, *okta.Response, error) {
 	url := "/api/v1/policies"
 	if qp != nil {
 		url = url + qp.String()
@@ -129,7 +129,7 @@ func ListPasswordPolicies(ctx context.Context, client okta.Client, qp *query.Par
 		return nil, nil, err
 	}
 
-	var policies []*PasswordPolicy
+	var policies []*PolicyStructure
 
 	resp, err := requestExecutor.Do(ctx, req, &policies)
 	if err != nil {
