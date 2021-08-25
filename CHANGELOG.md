@@ -3,7 +3,6 @@
 _What's new?_
 
 - Add support for service application and private key authentication ([#22](https://github.com/turbot/steampipe-plugin-okta/pull/22))
-
 - Update the config and docs/index.md with more information about service app credentials
 
 
