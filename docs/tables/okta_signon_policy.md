@@ -20,7 +20,7 @@ order by
   priority;
 ```
 
-### List system sing on policies
+### List system sign on policies
 
 ```sql
 select

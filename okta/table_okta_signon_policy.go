@@ -2,12 +2,9 @@ package okta
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
@@ -58,17 +55,6 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 	if d.Table.Name == "okta_signon_policy" {
 		input.Type = "OKTA_SIGN_ON"
 		input.Expand = "rules"
-	}
-
-	policyType := d.KeyColumnQuals["type"].GetStringValue()
-	if input == nil && policyType == "" {
-		return nil, nil
-	} else {
-		policyType = input.Type
-	}
-
-	if !helpers.StringSliceContains(policyTypes, policyType) {
-		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))
 	}
 
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
