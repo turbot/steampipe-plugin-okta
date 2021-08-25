@@ -53,6 +53,22 @@ where
   status = 'INACTIVE';
 ```
 
+### List highest priority mfa policy details
+
+```sql
+select
+  name,
+  id,
+  created,
+  status,
+  priority,
+  system
+from
+  okta_mfa_policy
+where
+  priority = 1;
+```
+
 ### Get rules details for each mfa policy
 
 ```sql
