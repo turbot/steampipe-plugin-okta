@@ -53,22 +53,6 @@ where
   status = 'INACTIVE';
 ```
 
-### Get policy details for each mfa policy
-
-```sql
-select
-  name,
-  id,
-  status,
-  jsonb_pretty(settings -> 'password' -> 'age') as password_age,
-  jsonb_pretty(settings -> 'password' -> 'complexity') as password_complexity,
-  jsonb_pretty(settings -> 'password' -> 'lockout') as password_lockout,
-  jsonb_pretty(settings -> 'recovery' -> 'factors') as recovery_factors,
-  jsonb_pretty(settings -> 'delegation' -> 'options') as delegation_options
-from
-  okta_mfa_policy;
-```
-
 ### Get rules details for each mfa policy
 
 ```sql
