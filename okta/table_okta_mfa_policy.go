@@ -53,7 +53,7 @@ func listOktaMfaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 
 	input := &query.Params{}
 	if err != nil {
-		logger.Error("listOktaPolicies", "connect", err)
+		logger.Error("listOktaMfaPolicies", "connect", err)
 		return nil, err
 	}
 
@@ -75,7 +75,7 @@ func listOktaMfaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 
 	policies, resp, err := ListMfaPolicies(ctx, *client, input)
 	if err != nil {
-		logger.Error("listOktaPolicies", "list policies", err)
+		logger.Error("listOktaMfaPolicies", "list policies", err)
 		return nil, err
 	}
 
@@ -88,7 +88,7 @@ func listOktaMfaPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaPolicies", "list policies paging", err)
+			logger.Error("listOktaMfaPolicies", "list policies paging", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
