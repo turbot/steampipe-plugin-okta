@@ -2,13 +2,9 @@ package okta
 
 import (
 	"context"
-	"fmt"
-	"strings"
-	"time"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
@@ -38,9 +34,7 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 
 			// JSON Columns
 			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
-			{Name: "links", Type: proto.ColumnType_JSON, Description: "Hyperlinks"},
 			{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromField("Embedded.rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
-			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings of the password policy."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
@@ -51,91 +45,34 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
-
 	input := &query.Params{}
 	if err != nil {
-		logger.Error("listOktaPolicies", "connect", err)
+		logger.Error("listOktaIdpDiscoveryPolicies", "connect", err)
 		return nil, err
 	}
-
 	if d.Table.Name == "okta_idp_discovery_policy" {
 		input.Type = "IDP_DISCOVERY"
 		input.Expand = "rules"
 	}
-
-	policyType := d.KeyColumnQuals["type"].GetStringValue()
-	if input == nil && policyType == "" {
-		return nil, nil
-	} else {
-		policyType = input.Type
-	}
-
-	if !helpers.StringSliceContains(policyTypes, policyType) {
-		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))
-	}
-
-	policies, resp, err := ListIdpDiscoveryPolicies(ctx, *client, input)
+	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
-		logger.Error("listOktaPolicies", "list policies", err)
+		logger.Error("listOktaIdpDiscoveryPolicies", "list policies", err)
 		return nil, err
 	}
-
 	for _, policy := range policies {
 		d.StreamListItem(ctx, policy)
 	}
-
 	// paging
 	for resp.HasNextPage() {
 		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaPolicies", "list policies paging", err)
+			logger.Error("listOktaIdpDiscoveryPolicies", "list policies paging", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
 			d.StreamListItem(ctx, policy)
 		}
 	}
-
 	return nil, err
-}
-
-// generic policy missing Settings field
-type DiscoveryPolicy struct {
-	Embedded    interface{}                `json:"_embedded,omitempty"`
-	Links       interface{}                `json:"_links,omitempty"`
-	Settings    interface{}                `json:"settings,omitempty"`
-	Conditions  *okta.PolicyRuleConditions `json:"conditions,omitempty"`
-	Created     *time.Time                 `json:"created,omitempty"`
-	Description string                     `json:"description,omitempty"`
-	Id          string                     `json:"id,omitempty"`
-	LastUpdated *time.Time                 `json:"lastUpdated,omitempty"`
-	Name        string                     `json:"name,omitempty"`
-	Priority    int64                      `json:"priority,omitempty"`
-	Status      string                     `json:"status,omitempty"`
-	System      *bool                      `json:"system,omitempty"`
-	Type        string                     `json:"type,omitempty"`
-}
-
-// Gets all IDP Discovery policies with the specified type.
-func ListIdpDiscoveryPolicies(ctx context.Context, client okta.Client, qp *query.Params) ([]*DiscoveryPolicy, *okta.Response, error) {
-	url := "/api/v1/policies"
-	if qp != nil {
-		url = url + qp.String()
-	}
-
-	requestExecutor := client.GetRequestExecutor()
-	req, err := requestExecutor.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var policies []*DiscoveryPolicy
-
-	resp, err := requestExecutor.Do(ctx, req, &policies)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return policies, resp, nil
 }
