@@ -1,4 +1,4 @@
-# Table: okta_password_policy
+# Table: okta_idp_discovery_policy
 
 The [IdP Discovery Policy](https://developer.okta.com/docs/reference/api/policy/#idp-discovery-policy) determines where to route Users when they are attempting to sign in to your org. Users can be routed to a variety of Identity Providers (SAML2, IWA, AgentlessDSSO, X509, FACEBOOK, GOOGLE, LINKEDIN, MICROSOFT, OIDC) based on multiple conditions.
 
