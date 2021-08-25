@@ -1,3 +1,12 @@
+## v0.1.0 [2021-08-25]
+
+_What's new?_
+
+-  Add support for service application and private key authentication ([#22](https://github.com/turbot/steampipe-plugin-okta/pull/22))
+
+- Updated: Config and docs/index.md with more information about service app credentials
+
+
 ## v0.0.1 [2021-08-13]
 
 _What's new?_
