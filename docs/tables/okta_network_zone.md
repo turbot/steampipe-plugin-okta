@@ -13,11 +13,11 @@ select
   created,
   status,
   system,
-  locations
+  locations,
+  proxy_type,
+  usage
 from
-  okta_network_zone
-order by
-  priority;
+  okta_network_zone;
 ```
 
 ### List TorAnonymizer proxy type network zone
