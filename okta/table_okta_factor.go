@@ -2,7 +2,8 @@ package okta
 
 import (
 	"context"
-	"time"
+	"strings"
+
 	// "fmt"
 	// "strings"
 
@@ -22,12 +23,12 @@ func tableOktaFactor() *plugin.Table {
 		Description: "Okta Factor Sequencing enables passwordless MFA by requiring end users to successfully pass all specified MFA factors.",
 		Get: &plugin.GetConfig{
 			Hydrate:           getOktaFactor,
-			KeyColumns:        plugin.SingleColumn("id"),
+			KeyColumns:        plugin.AllColumns([]string{"id", "user_id"}),
 			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
 		},
 		List: &plugin.ListConfig{
 			ParentHydrate: listOktaUsers,
-			Hydrate: listOktaFactors,
+			Hydrate:       listOktaFactors,
 		},
 		HydrateConfig: []plugin.HydrateConfig{
 			{
@@ -37,43 +38,30 @@ func tableOktaFactor() *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			// Top Columns
-			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
+			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for Group.", Transform: transform.FromField("Factor.Id")},
 			{Name: "user_id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
-			{Name: "factor_type", Type: proto.ColumnType_STRING, Description: "Description of the Group."},
-			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group was created."},
+			{Name: "factor_type", Type: proto.ColumnType_STRING, Description: "Description of the Group.", Transform: transform.FromField("Factor.FactorType")},
+			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group was created.", Transform: transform.FromField("Factor.Created")},
 
 			// Other Columns
-			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group's profile was last updated."},
-			{Name: "provider", Type: proto.ColumnType_STRING, Description: "Determines how a Group's Profile and memberships are managed. Can be one of OKTA_GROUP, APP_GROUP or BUILT_IN."},
-			{Name: "status", Type: proto.ColumnType_STRING, Description: "Timestamp when Group's memberships were last updated."},
+			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group's profile was last updated.", Transform: transform.FromField("Factor.LastUpdated")},
+			{Name: "provider", Type: proto.ColumnType_STRING, Description: "Determines how a Group's Profile and memberships are managed. Can be one of OKTA_GROUP, APP_GROUP or BUILT_IN.", Transform: transform.FromField("Factor.Provider")},
+			{Name: "status", Type: proto.ColumnType_STRING, Description: "Timestamp when Group's memberships were last updated.", Transform: transform.FromField("Factor.Status")},
 
 			// JSON Columns
-			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The Group's Profile properties."},
+			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The Group's Profile properties.", Transform: transform.FromField("Factor.Embedded")},
 			{Name: "links", Type: proto.ColumnType_JSON, Description: "Determines the Group's profile."},
-			{Name: "verify", Type: proto.ColumnType_JSON, Description: "List of all users that are a member of this Group."},
+			{Name: "verify", Type: proto.ColumnType_JSON, Description: "List of all users that are a member of this Group.", Transform: transform.FromField("Factor.Verify")},
 
 			// Steampipe Columns
-			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Id"), Description: titleDescription},
+			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Factor.Id"), Description: titleDescription},
 		},
 	}
 }
 
-// type UserFactorInfo = struct {
-// 	okta.Factor
-// 	UserId string
-// }
-
 type UserFactorInfo struct {
-	Embedded    interface{}
-	Links       interface{}
-	Created     *time.Time
-	FactorType  string
-	Id          string
-	LastUpdated *time.Time
-	Provider    string
-	Status      string
-	Verify      interface{}
-	UserId      string
+	UserId string
+	Factor okta.Factor
 }
 
 //// LIST FUNCTION
@@ -97,19 +85,18 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	factors, resp, err := client.UserFactor.ListFactors(ctx, userId)
 	if err != nil {
-		logger.Error("listOktaFactors", "list factors", err)
+		logger.Error("listOktaFactors", "Error", err)
+		if strings.Contains(err.Error(), "Not found") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
 	for _, factor := range factors {
-		// var data interface{}
-		// data = factor
-		// d.StreamListItem(ctx, UserFactorInfo{
-		// 	Embedded: data["Embedded"],
-		// })
-		// fmt.Print(factor, "arnab \n")
-		logger.Trace("listOktaFactors list", "list factor paging", factor)
-		// d.StreamListItem(ctx, factor)
+		d.StreamListItem(ctx, UserFactorInfo{
+			UserId: userId,
+			Factor: factor,
+		})
 	}
 
 	// paging
@@ -133,25 +120,26 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaGroup")
-	groupId := d.KeyColumnQuals["id"].GetStringValue()
-	
+	logger.Debug("getOktaFactor")
+	userId := d.KeyColumnQuals["user_id"].GetStringValue()
+	factorId := d.KeyColumnQuals["id"].GetStringValue()
 
-	if groupId == "" {
+	if userId == "" || factorId == ""{
 		return nil, nil
 	}
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaGroup", "connect", err)
+		logger.Error("getOktaFactor", "connect", err)
 		return nil, err
 	}
 
-	group, _, err := client.Group.GetGroup(ctx, groupId)
+	var factorInstance okta.Factor
+	factor, _, err := client.UserFactor.GetFactor(ctx, userId, factorId, factorInstance)
 	if err != nil {
-		logger.Error("getOktaGroup", "get group", err)
+		logger.Error("getOktaFactor", "get factor", err)
 		return nil, err
 	}
 
-	return group, nil
+	return &UserFactorInfo{UserId: userId, Factor: factor}, nil
 }
