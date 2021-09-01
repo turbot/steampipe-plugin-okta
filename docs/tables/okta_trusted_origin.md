@@ -1,6 +1,6 @@
 # Table: okta_trusted_origin
 
-The Okta Trusted Origins API provides operations to manage Trusted Origins and sources.
+A Trusted Origin is a security-based concept that combines the URI scheme, hostname, and port number of a page. All cross-origin web requests and redirects from Okta to your organization’s websites must be explicitly allowed.
 
 When external URLs are requested during sign-in, sign-out, or recovery operations, Okta checks those URLs against the allowed list of Trusted Origins. Trusted Origins also enable browser-based applications to access Okta APIs from JavaScript (CORS). If the origins aren't specified, the related operation (redirect or Okta API access) isn't permitted.
 
@@ -36,7 +36,7 @@ from
   okta_trusted_origin;
 ```
 
-### Get authorization server by ID
+### List trusted origins last updated for more than 30 days
 
 ```sql
 select
@@ -50,5 +50,22 @@ select
 from
   okta_trusted_origin
 where
-  id = 'tos1l3v1djOJMSQkh5d7';
+  last_updated < current_timestamp - interval '30 days';
+```
+
+### List CORS scoped trusted origins
+
+```sql
+select
+  name,
+  id,
+  created,
+  last_updated,
+  origin,
+  scopes,
+  status
+from
+  okta_trusted_origin
+where
+  scopes @> '[{"type":"CORS"}]'::jsonb;
 ```
