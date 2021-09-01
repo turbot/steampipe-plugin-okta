@@ -40,7 +40,6 @@ func tableOktaFactor() *plugin.Table {
 
 			// JSON Columns
 			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The embedded properties of the factor .", Transform: transform.FromField("Factor.Embedded")},
-			{Name: "links", Type: proto.ColumnType_JSON, Description: "The link properties of the factor.", Transform: transform.FromField("Factor.Links")},
 			{Name: "verify", Type: proto.ColumnType_JSON, Description: "The verify properties of the factor.", Transform: transform.FromField("Factor.Verify")},
 
 			// Steampipe Columns

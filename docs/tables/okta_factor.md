@@ -48,21 +48,6 @@ where
   provider = 'OKTA';
 ```
 
-### List factor links
-
-```sql
-select
-  id,
-  user_id,
-  status,
-  jsonb_pretty(links -> 'activate') as link_activate,
-  jsonb_pretty(links -> 'self') as link_self,
-  jsonb_pretty(links -> 'user') as link_scopes,
-  jsonb_pretty(links -> 'verify') as link_rotateKey
-from
-  okta_factor;
-```
-
 ### Get factor by factor ID and user ID
 
 ```sql
