@@ -2,13 +2,10 @@ package okta
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
@@ -21,33 +18,37 @@ func tableOktaPasswordPolicy() *plugin.Table {
 		Name:        "okta_password_policy",
 		Description: "The Password Policy determines the requirements for a user's password length and complexity, as well as the frequency with which a password must be changed. This Policy also governs the recovery operations that may be performed by the User, including change password, reset (forgot) password, and self-service password unlock.",
 		List: &plugin.ListConfig{
-			Hydrate: listOktaPasswordPolicies,
+			Hydrate: listPolicies,
 		},
-		Columns: []*plugin.Column{
-			// Top Columns
-			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
-			{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
-			{Name: "description", Type: proto.ColumnType_STRING, Description: "Description of the Policy."},
-			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was created."},
-
-			// Other Columns
-			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was last modified."},
-			{Name: "priority", Type: proto.ColumnType_INT, Description: "Priority of the Policy."},
-			{Name: "status", Type: proto.ColumnType_STRING, Description: "Status of the Policy: ACTIVE or INACTIVE."},
-			{Name: "system", Type: proto.ColumnType_BOOL, Description: "This is set to true on system policies, which cannot be deleted."},
-
-			// JSON Columns
-			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
-			{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromField("Embedded.rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
-			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings of the password policy."},
-
-			// Steampipe Columns
-			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		},
+		Columns: listPoliciesWithSettingsColumns(),
 	}
 }
 
-func listOktaPasswordPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
+func listPoliciesWithSettingsColumns() []*plugin.Column {
+	return []*plugin.Column{
+		// Top Columns
+		{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
+		{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
+		{Name: "description", Type: proto.ColumnType_STRING, Description: "Description of the Policy."},
+		{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was created."},
+
+		// Other Columns
+		{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the Policy was last modified."},
+		{Name: "priority", Type: proto.ColumnType_INT, Description: "Priority of the Policy."},
+		{Name: "status", Type: proto.ColumnType_STRING, Description: "Status of the Policy: ACTIVE or INACTIVE."},
+		{Name: "system", Type: proto.ColumnType_BOOL, Description: "This is set to true on system policies, which cannot be deleted."},
+
+		// JSON Columns
+		{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
+		{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromField("Embedded.rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
+		{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings of the password policy."},
+
+		// Steampipe Columns
+		{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
+	}
+}
+
+func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 
@@ -57,25 +58,17 @@ func listOktaPasswordPolicies(ctx context.Context, d *plugin.QueryData, _ *plugi
 		return nil, err
 	}
 
-	if d.Table.Name == "okta_password_policy" {
+	input.Expand = "rules"
+	switch d.Table.Name {
+	case "okta_password_policy":
 		input.Type = "PASSWORD"
-		input.Expand = "rules"
+	case "okta_mfa_policy":
+		input.Type = "MFA_ENROLL"
 	}
 
-	policyType := d.KeyColumnQuals["type"].GetStringValue()
-	if input == nil && policyType == "" {
-		return nil, nil
-	} else {
-		policyType = input.Type
-	}
-
-	if !helpers.StringSliceContains(policyTypes, policyType) {
-		return nil, fmt.Errorf("%s is not a valid policy type. Valid policy types are: %s", policyType, strings.Join(policyTypes, ", "))
-	}
-
-	policies, resp, err := ListPasswordPolicies(ctx, *client, input)
+	policies, resp, err := listPoliciesWithSettings(ctx, *client, input)
 	if err != nil {
-		logger.Error("listOktaPolicies", "list policies", err)
+		logger.Error("listPolicies", "list policies", err)
 		return nil, err
 	}
 
@@ -88,7 +81,7 @@ func listOktaPasswordPolicies(ctx context.Context, d *plugin.QueryData, _ *plugi
 		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaPolicies", "list policies paging", err)
+			logger.Error("listPolicies", "list policies paging", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
@@ -99,8 +92,31 @@ func listOktaPasswordPolicies(ctx context.Context, d *plugin.QueryData, _ *plugi
 	return nil, err
 }
 
+// Generic policy returned by
+func listPoliciesWithSettings(ctx context.Context, client okta.Client, qp *query.Params) ([]*PolicyStructure, *okta.Response, error) {
+	url := "/api/v1/policies"
+	if qp != nil {
+		url = url + qp.String()
+	}
+
+	requestExecutor := client.GetRequestExecutor()
+	req, err := requestExecutor.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var policies []*PolicyStructure
+
+	resp, err := requestExecutor.Do(ctx, req, &policies)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return policies, resp, nil
+}
+
 // generic policy missing Settings field
-type PasswordPolicy struct {
+type PolicyStructure struct {
 	Embedded    interface{}                `json:"_embedded,omitempty"`
 	Links       interface{}                `json:"_links,omitempty"`
 	Settings    interface{}                `json:"settings,omitempty"`
@@ -114,27 +130,4 @@ type PasswordPolicy struct {
 	Status      string                     `json:"status,omitempty"`
 	System      *bool                      `json:"system,omitempty"`
 	Type        string                     `json:"type,omitempty"`
-}
-
-// Gets all password policies with the specified type.
-func ListPasswordPolicies(ctx context.Context, client okta.Client, qp *query.Params) ([]*PasswordPolicy, *okta.Response, error) {
-	url := "/api/v1/policies"
-	if qp != nil {
-		url = url + qp.String()
-	}
-
-	requestExecutor := client.GetRequestExecutor()
-	req, err := requestExecutor.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var policies []*PasswordPolicy
-
-	resp, err := requestExecutor.Do(ctx, req, &policies)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return policies, resp, nil
 }
