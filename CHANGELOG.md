@@ -1,3 +1,13 @@
+## v0.1.0 [2021-09-01]
+
+_What's new?_
+
+- New tables added
+  - [okta_idp_discovery_policy](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_idp_discovery_policy) ([#25](https://github.com/turbot/steampipe-plugin-okta/pull/25))
+  - [okta_mfa_policy](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_mfa_policy) ([#26](https://github.com/turbot/steampipe-plugin-okta/pull/26))
+  - [okta_network_zone](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_network_zone) ([#29](https://github.com/turbot/steampipe-plugin-okta/pull/29))
+  - [okta_signon_policy](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_signon_policy) ([#27](https://github.com/turbot/steampipe-plugin-okta/pull/27))
+  
 ## v0.0.2 [2021-08-25]
 
 _What's new?_
