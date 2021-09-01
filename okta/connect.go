@@ -18,7 +18,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 	oktaConfig := GetConfig(d.Connection)
 
 	var domain, token, clientID, privateKey string
-	scopes := []string{"okta.users.read", "okta.groups.read", "okta.roles.read", "okta.apps.read", "okta.policies.read"}
+	scopes := []string{"okta.users.read", "okta.groups.read", "okta.roles.read", "okta.apps.read", "okta.policies.read", "okta.authorizationServers.manage", "okta.authorizationServers.read"}
 	if oktaConfig.Domain != nil {
 		domain = *oktaConfig.Domain
 	} else {

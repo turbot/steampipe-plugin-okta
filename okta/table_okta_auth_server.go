@@ -43,7 +43,6 @@ func tableOktaAuthServer() *plugin.Table {
 			// JSON Columns
 			{Name: "audiences", Type: proto.ColumnType_JSON, Description: "The audiences of the authorization server."},
 			{Name: "credentials", Type: proto.ColumnType_JSON, Description: "The authorization server credentials."},
-			{Name: "links", Type: proto.ColumnType_JSON, Description: "The authorization server link properties."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
