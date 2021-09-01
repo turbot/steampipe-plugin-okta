@@ -32,6 +32,22 @@ where
   status = 'PENDING_ACTIVATION';
 ```
 
+### List factors provided by Okta
+
+```sql
+select
+  id,
+  user_id,
+  factor_type,
+  created,
+  provider,
+  status
+from
+  okta_factor
+where
+  provider = 'OKTA';
+```
+
 ### List factor links
 
 ```sql
