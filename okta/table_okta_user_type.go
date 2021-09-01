@@ -39,6 +39,7 @@ func tableOktaUserType() *plugin.Table {
 			{Name: "description", Type: proto.ColumnType_STRING, Description: "A human-readable description of the type."},
 			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the User Type was last updated."},
 			{Name: "last_updated_by", Type: proto.ColumnType_STRING, Description: "The user ID of the last user to edit this type."},
+			{Name: "links", Type: proto.ColumnType_JSON, Description: "The user ID of the last user to edit this type."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
