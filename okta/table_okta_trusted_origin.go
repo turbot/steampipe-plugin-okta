@@ -105,7 +105,7 @@ func getOktaTrustedOrigin(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 	
 	app, _, err := client.TrustedOrigin.GetOrigin(ctx, trustedOriginId)
 	if err != nil {
-		logger.Error("getOktaTrustedOrigin", "get application", err)
+		logger.Error("getOktaTrustedOrigin", "get trusted origin", err)
 		return nil, err
 	}
 

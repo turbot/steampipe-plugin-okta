@@ -36,7 +36,7 @@ from
   okta_trusted_origin;
 ```
 
-### List trusted origins last updated for more than 30 days
+### List trusted origins for more than 30 days since last updated
 
 ```sql
 select
