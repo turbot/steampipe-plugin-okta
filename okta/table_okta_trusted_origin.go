@@ -16,7 +16,7 @@ import (
 func tableOktaTrustedOrigin() *plugin.Table {
 	return &plugin.Table{
 		Name:        "okta_trusted_origin",
-		Description: "Okta Trusted Origin",
+		Description: "Trusted Origin is a security-based concept that combines the URI scheme, hostname, and port number of a page.",
 		Get: &plugin.GetConfig{
 			Hydrate:           getOktaTrustedOrigin,
 			KeyColumns:        plugin.SingleColumn("id"),
@@ -40,7 +40,6 @@ func tableOktaTrustedOrigin() *plugin.Table {
 
 			// JSON Columns
 			{Name: "scopes", Type: proto.ColumnType_JSON, Description: "The scopes for the trusted origin. Valid values are 'CORS' or 'REDIRECT'."},
-			{Name: "links", Type: proto.ColumnType_JSON, Description: "The trusted origin link properties."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},

@@ -23,20 +23,7 @@ from
   okta_trusted_origin;
 ```
 
-### List trusted origins links
-
-```sql
-select
-  name,
-  id,
-  status,
-  jsonb_pretty(links -> 'deactivate') as link_deactivate,
-  jsonb_pretty(links -> 'self') as link_self
-from
-  okta_trusted_origin;
-```
-
-### List trusted origins for more than 30 days since last updated
+### List trusted origins last updated 30 days ago
 
 ```sql
 select
