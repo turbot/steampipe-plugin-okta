@@ -13,7 +13,7 @@ _What's new?_
 
 _Enhancements_
 
-- The documentation now includes additional information on `user_type` and `network_zone` tables
+- The documentation now includes additional information on `okta_user_type` and `okta_network_zone` tables
 
 _Bug fixes_
 
