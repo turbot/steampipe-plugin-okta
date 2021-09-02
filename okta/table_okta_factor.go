@@ -28,10 +28,11 @@ func tableOktaFactor() *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			// Top Columns
-			{Name: "id", Type: proto.ColumnType_STRING, Description: "A unique key for the factor.", Transform: transform.FromField("Factor.Id")},
-			{Name: "user_id", Type: proto.ColumnType_STRING, Description: "A unique key for the user."},
-			{Name: "factor_type", Type: proto.ColumnType_STRING, Description: "The type of the factor.", Transform: transform.FromField("Factor.FactorType")},
-			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "The timestamp when the factor was created.", Transform: transform.FromField("Factor.Created")},
+			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for Group.", Transform: transform.FromField("Factor.Id")},
+			{Name: "user_id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
+			{Name: "user_name", Type: proto.ColumnType_STRING, Description: "Unique identifier for the user (username)."},
+			{Name: "factor_type", Type: proto.ColumnType_STRING, Description: "Description of the Group.", Transform: transform.FromField("Factor.FactorType")},
+			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group was created.", Transform: transform.FromField("Factor.Created")},
 
 			// Other Columns
 			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "The timestamp when the factor was last updated.", Transform: transform.FromField("Factor.LastUpdated")},
@@ -39,8 +40,8 @@ func tableOktaFactor() *plugin.Table {
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "The current status of the factor.", Transform: transform.FromField("Factor.Status")},
 
 			// JSON Columns
-			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The embedded properties of the factor .", Transform: transform.FromField("Factor.Embedded")},
-			{Name: "verify", Type: proto.ColumnType_JSON, Description: "The verify properties of the factor.", Transform: transform.FromField("Factor.Verify")},
+			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The Group's Profile properties.", Transform: transform.FromField("Factor.Embedded")},
+			{Name: "verify", Type: proto.ColumnType_JSON, Description: "List of all users that are a member of this Group.", Transform: transform.FromField("Factor.Verify")},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Factor.Id"), Description: titleDescription},
@@ -49,7 +50,8 @@ func tableOktaFactor() *plugin.Table {
 }
 
 type UserFactorInfo struct {
-	UserId string
+	UserId   string
+	UserName string
 	Factor okta.Factor
 }
 
@@ -64,8 +66,12 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	}
 
 	var userId string
+	var userName string
 	if h.Item != nil {
-		userId = h.Item.(*okta.User).Id
+		userData := h.Item.(*okta.User)
+		userId = userData.Id
+		userProfile := *userData.Profile
+		userName = userProfile["login"].(string)
 	}
 
 	if userId == "" {
@@ -83,8 +89,9 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	for _, factor := range factors {
 		d.StreamListItem(ctx, UserFactorInfo{
-			UserId: userId,
-			Factor: factor,
+			UserId:   userId,
+			UserName: userName,
+			Factor:   factor,
 		})
 	}
 
@@ -97,7 +104,11 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 			return nil, err
 		}
 		for _, factor := range nextFactorSet {
-			d.StreamListItem(ctx, factor)
+			d.StreamListItem(ctx, UserFactorInfo{
+				UserId:   userId,
+				UserName: userName,
+				Factor:   *factor,
+			})
 		}
 	}
 
@@ -112,7 +123,7 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	userId := d.KeyColumnQuals["user_id"].GetStringValue()
 	factorId := d.KeyColumnQuals["id"].GetStringValue()
 
-	if userId == "" || factorId == ""{
+	if userId == "" || factorId == "" {
 		return nil, nil
 	}
 
@@ -122,6 +133,17 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return nil, err
 	}
 
+	user, _, err := client.User.GetUser(ctx, userId)
+	if err != nil {
+		if strings.Contains(err.Error(), "Not found") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	userProfile := *user.Profile
+	userName := userProfile["login"].(string)
+
 	var factorInstance okta.Factor
 	factor, _, err := client.UserFactor.GetFactor(ctx, userId, factorId, factorInstance)
 	if err != nil {
@@ -129,5 +151,5 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return nil, err
 	}
 
-	return &UserFactorInfo{UserId: userId, Factor: factor}, nil
+	return &UserFactorInfo{UserId: userId, UserName: userName, Factor: factor}, nil
 }
