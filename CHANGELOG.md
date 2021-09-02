@@ -3,10 +3,21 @@
 _What's new?_
 
 - New tables added
+  - [okta_auth_server](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_auth_server) ([#28](https://github.com/turbot/steampipe-plugin-okta/pull/28))
+  - [okta_factor](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_factor) ([#30](https://github.com/turbot/steampipe-plugin-okta/pull/30))
   - [okta_idp_discovery_policy](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_idp_discovery_policy) ([#25](https://github.com/turbot/steampipe-plugin-okta/pull/25))
   - [okta_mfa_policy](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_mfa_policy) ([#26](https://github.com/turbot/steampipe-plugin-okta/pull/26))
   - [okta_network_zone](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_network_zone) ([#29](https://github.com/turbot/steampipe-plugin-okta/pull/29))
   - [okta_signon_policy](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_signon_policy) ([#27](https://github.com/turbot/steampipe-plugin-okta/pull/27))
+  - [okta_trusted_origin](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_trusted_origin) ([#31](https://github.com/turbot/steampipe-plugin-okta/pull/31))
+
+_Enhancements_
+
+- The documentation now includes additional information on `user_type` and `network_zone` tables
+
+_Bug fixes_
+
+- The `title` column for `okta_user` table will no longer include `nil` values ([#35](https://github.com/turbot/steampipe-plugin-okta/pull/35))
   
 ## v0.0.2 [2021-08-25]
 
