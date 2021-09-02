@@ -4,11 +4,7 @@ import (
 	"context"
 	"strings"
 
-	// "fmt"
-	// "strings"
-
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	// "github.com/okta/okta-sdk-golang/v2/okta/query"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
 
@@ -20,7 +16,7 @@ import (
 func tableOktaFactor() *plugin.Table {
 	return &plugin.Table{
 		Name:        "okta_factor",
-		Description: "Okta Factor Sequencing enables passwordless MFA by requiring end users to successfully pass all specified MFA factors.",
+		Description: "Represents an Okta Factor.",
 		Get: &plugin.GetConfig{
 			Hydrate:           getOktaFactor,
 			KeyColumns:        plugin.AllColumns([]string{"id", "user_id"}),
@@ -30,28 +26,21 @@ func tableOktaFactor() *plugin.Table {
 			ParentHydrate: listOktaUsers,
 			Hydrate:       listOktaFactors,
 		},
-		HydrateConfig: []plugin.HydrateConfig{
-			{
-				Func:           listGroupMembers,
-				MaxConcurrency: 10,
-			},
-		},
 		Columns: []*plugin.Column{
 			// Top Columns
-			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for Group.", Transform: transform.FromField("Factor.Id")},
-			{Name: "user_id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
-			{Name: "factor_type", Type: proto.ColumnType_STRING, Description: "Description of the Group.", Transform: transform.FromField("Factor.FactorType")},
-			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group was created.", Transform: transform.FromField("Factor.Created")},
+			{Name: "id", Type: proto.ColumnType_STRING, Description: "A unique key for the factor.", Transform: transform.FromField("Factor.Id")},
+			{Name: "user_id", Type: proto.ColumnType_STRING, Description: "A unique key for the user."},
+			{Name: "factor_type", Type: proto.ColumnType_STRING, Description: "The type of the factor.", Transform: transform.FromField("Factor.FactorType")},
+			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "The timestamp when the factor was created.", Transform: transform.FromField("Factor.Created")},
 
 			// Other Columns
-			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when Group's profile was last updated.", Transform: transform.FromField("Factor.LastUpdated")},
-			{Name: "provider", Type: proto.ColumnType_STRING, Description: "Determines how a Group's Profile and memberships are managed. Can be one of OKTA_GROUP, APP_GROUP or BUILT_IN.", Transform: transform.FromField("Factor.Provider")},
-			{Name: "status", Type: proto.ColumnType_STRING, Description: "Timestamp when Group's memberships were last updated.", Transform: transform.FromField("Factor.Status")},
+			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "The timestamp when the factor was last updated.", Transform: transform.FromField("Factor.LastUpdated")},
+			{Name: "provider", Type: proto.ColumnType_STRING, Description: "The provider for the factor.", Transform: transform.FromField("Factor.Provider")},
+			{Name: "status", Type: proto.ColumnType_STRING, Description: "The current status of the factor.", Transform: transform.FromField("Factor.Status")},
 
 			// JSON Columns
-			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The Group's Profile properties.", Transform: transform.FromField("Factor.Embedded")},
-			{Name: "links", Type: proto.ColumnType_JSON, Description: "Determines the Group's profile."},
-			{Name: "verify", Type: proto.ColumnType_JSON, Description: "List of all users that are a member of this Group.", Transform: transform.FromField("Factor.Verify")},
+			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The embedded properties of the factor .", Transform: transform.FromField("Factor.Embedded")},
+			{Name: "verify", Type: proto.ColumnType_JSON, Description: "The verify properties of the factor.", Transform: transform.FromField("Factor.Verify")},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Factor.Id"), Description: titleDescription},
@@ -109,7 +98,6 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		}
 		for _, factor := range nextFactorSet {
 			d.StreamListItem(ctx, factor)
-			// d.StreamListItem(ctx, UserFactorInfo{*factor, userId})
 		}
 	}
 
