@@ -17,7 +17,7 @@ _Enhancements_
 
 _Bug fixes_
 
-- The `title` column for `okta_user` table will no longer include `nil` values ([#35](https://github.com/turbot/steampipe-plugin-okta/pull/35))
+- The `title` column for `okta_user` table will no longer have `nil` values ([#35](https://github.com/turbot/steampipe-plugin-okta/pull/35))
   
 ## v0.0.2 [2021-08-25]
 
