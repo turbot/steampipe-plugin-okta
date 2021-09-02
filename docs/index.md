@@ -91,6 +91,8 @@ If using the Okta service application, the following scopes must be enabled for 
 - okta.trustedOrigins.read
 - okta.factors.read
 
+**Note:** Table `okta_user_type` and `okta_network_zone` doesn't work in Service App authentication mode. 
+
 ## Get involved
 
 - Open source: https://github.com/turbot/steampipe-plugin-okta
