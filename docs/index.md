@@ -87,6 +87,8 @@ If using the Okta service application, the following scopes must be enabled for 
 - okta.apps.read
 - okta.roles.read
 - okta.policies.read
+- okta.authorizationServers.read
+- okta.trustedOrigins.read
 
 ## Get involved
 

@@ -22,8 +22,6 @@ var (
 		"<":  "lt",
 		"<>": "ne",
 	}
-	// TODO - policy types creating issue "OAUTH_AUTHORIZATION_POLICY", "ACCESS_POLICY", "PROFILE_ENROLLMENT"
-	policyTypes = []string{"OKTA_SIGN_ON", "PASSWORD", "MFA_ENROLL", "IDP_DISCOVERY"}
 )
 
 //// other useful functions
