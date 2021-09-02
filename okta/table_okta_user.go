@@ -74,7 +74,7 @@ func tableOktaUser() *plugin.Table {
 			{Name: "assigned_roles", Type: proto.ColumnType_JSON, Hydrate: listAssignedRolesForUser, Transform: transform.FromValue(), Description: "List of roles assigned to user."},
 
 			// Steampipe Columns
-			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("login"), Description: titleDescription},
+			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.From(userProfile), Description: titleDescription},
 		},
 	}
 }
@@ -246,7 +246,11 @@ func userProfile(ctx context.Context, d *transform.TransformData) (interface{}, 
 	}
 	userProfile := *user.Profile
 
-	return userProfile[strcase.ToCamel(d.ColumnName)], nil
+	columnName := d.ColumnName
+	if columnName == "title" {
+		columnName = "login"
+	}
+	return userProfile[strcase.ToCamel(columnName)], nil
 }
 
 func transformUserGroups(ctx context.Context, d *transform.TransformData) (interface{}, error) {
