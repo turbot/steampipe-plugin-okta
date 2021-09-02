@@ -20,7 +20,7 @@ func tableOktaFactor() *plugin.Table {
 		Get: &plugin.GetConfig{
 			Hydrate:           getOktaFactor,
 			KeyColumns:        plugin.AllColumns([]string{"id", "user_id"}),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			ShouldIgnoreError: isNotFoundError([]string{"Not found", "Invalid Factor"}),
 		},
 		List: &plugin.ListConfig{
 			ParentHydrate: listOktaUsers,
@@ -52,7 +52,7 @@ func tableOktaFactor() *plugin.Table {
 type UserFactorInfo struct {
 	UserId   string
 	UserName string
-	Factor okta.Factor
+	Factor   okta.Factor
 }
 
 //// LIST FUNCTION
