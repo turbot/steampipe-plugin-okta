@@ -65,3 +65,27 @@ from
 where
   filter = 'group.id eq "00u1e5eizrjQKTWMA5d7"';
 ```
+
+### List application user assignments 
+
+```sql
+select 
+  name,
+  id, 
+  label, 
+  jsonb_pretty(assigned_users) as assigned_users
+from
+  okta_application;
+```
+
+### List application group assignments
+
+```sql
+select 
+  name,
+  id, 
+  label, 
+  jsonb_pretty(assigned_groups) as assigned_groups
+from
+  okta_application;
+```
