@@ -48,7 +48,6 @@ func tableOktaApplication() *plugin.Table {
 
 			// JSON Columns
 			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings for app."},
-			{Name: "profile", Type: proto.ColumnType_JSON, Description: "Valid JSON schema for specifying properties."},
 			{Name: "visibility", Type: proto.ColumnType_JSON, Description: "Visibility settings for app."},
 			{Name: "credentials", Type: proto.ColumnType_JSON, Description: "Credentials for the specified signOnMode."},
 			{Name: "accessibility", Type: proto.ColumnType_JSON, Description: "Access settings for app."},
