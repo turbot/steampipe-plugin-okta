@@ -1,3 +1,12 @@
+## v0.2.0 [2021-12-15]
+
+_Enhancements_
+
+- Recompiled plugin with [steampipe-plugin-sdk-v1.8.2](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v182--2021-11-22) ([#44](https://github.com/turbot/steampipe-plugin-okta/pull/44))
+- Recompiled plugin with Go version 1.17 ([#44](https://github.com/turbot/steampipe-plugin-okta/pull/44))
+- Added `assigned_users` and `assigned_groups` columns to `okta_application` table ([#41](https://github.com/turbot/steampipe-plugin-okta/pull/41))
+- Removed the `profile` column from `okta_application` table ([#42](https://github.com/turbot/steampipe-plugin-okta/pull/42))
+
 ## v0.1.0 [2021-09-02]
 
 _What's new?_
