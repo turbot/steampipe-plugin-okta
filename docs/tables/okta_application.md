@@ -66,7 +66,7 @@ where
   filter = 'group.id eq "00u1e5eizrjQKTWMA5d7"';
 ```
 
-### List application user assignments 
+### List assigned user details
 
 ```sql
 select 
@@ -78,7 +78,7 @@ from
   okta_application;
 ```
 
-### List application group assignments
+### List assigned group details
 
 ```sql
 select 

@@ -163,6 +163,7 @@ func getUsersAssignedToApplication(ctx context.Context, d *plugin.QueryData, h *
 		appId = d.KeyColumnQuals["id"].GetStringValue()
 	}
 
+	// Empty check for appId
 	if appId == "" {
 		return nil, nil
 	}
@@ -193,6 +194,7 @@ func getGroupsAssignedToApplication(ctx context.Context, d *plugin.QueryData, h 
 		appId = d.KeyColumnQuals["id"].GetStringValue()
 	}
 
+	// Empty check for appId
 	if appId == "" {
 		return nil, nil
 	}
