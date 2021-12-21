@@ -20,6 +20,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 		},
 		TableMap: map[string]*plugin.Table{
 			"okta_application":          tableOktaApplication(),
+			"okta_application_user":     tableOktaApplicationUser(),
 			"okta_auth_server":          tableOktaAuthServer(),
 			"okta_factor":               tableOktaFactor(),
 			"okta_group":                tableOktaGroup(),
