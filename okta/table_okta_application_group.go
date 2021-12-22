@@ -15,7 +15,7 @@ import (
 
 func tableOktaApplicationGroup() *plugin.Table {
 	return &plugin.Table{
-		Name:        "okta_application_group",
+		Name:        "okta_app_group_assignment",
 		Description: "Represents an application group assignment.",
 		Get: &plugin.GetConfig{
 			Hydrate:           getOktaApplicationGroup,

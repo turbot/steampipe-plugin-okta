@@ -1,4 +1,4 @@
-# Table: okta_application_group
+# Table: okta_app_group_assignment
 
 Application integrations can be assigned to groups. When app integrations share the same group they are "linked". This can be helpful if you need to add provisioning functionality in an SSO-enabled app integration.
 
@@ -13,37 +13,37 @@ select
   last_updated,
   priority
 from
-  okta_application_group;
+  okta_app_group_assignment;
 ```
 
 ### List groups that are not assigned to any application
 
 ```sql
 select
-  g.name as name,
-  g.description as description,
-  jsonb_pretty(g.group_members) as group_members
+  grp.name as name,
+  grp.description as description,
+  jsonb_pretty(grp.group_members) as group_members
 from
-  okta_group g
-full outer join okta_application_group ag on g.id = ag.id
+  okta_group grp
+full outer join okta_app_group_assignment ag on grp.id = ag.id
 where
-  g.id is null or ag.id is null;
+  grp.id is null or ag.id is null;
 ```
 
 ### List applications with assigned group details
 
 ```sql
 select
-  a.name as app_name,
-  a.id as app_id,
-  a.created as app_created,
-  a.status as app_status,
+  app.name as app_name,
+  app.id as app_id,
+  app.created as app_created,
+  app.status as app_status,
   ag.id as group_id,
-  g.name as group_name,
-  g.description as group_description,
-  jsonb_pretty(g.group_members) as group_members
+  grp.name as group_name,
+  grp.description as group_description,
+  jsonb_pretty(grp.group_members) as group_members
 from
-  okta_application a
-left join okta_application_group ag on a.id = ag.app_id
-left join okta_group g on ag.id = g.id;
+  okta_application app
+left join okta_app_group_assignment ag on app.id = ag.app_id
+left join okta_group grp on ag.id = grp.id;
 ```
