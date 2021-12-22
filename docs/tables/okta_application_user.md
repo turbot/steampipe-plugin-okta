@@ -1,4 +1,4 @@
-# Table: okta_application_user
+# Table: okta_app_user
 
 Application integrations can be assigned to individual users. This enables assigned users to access them.
 
@@ -14,39 +14,39 @@ select
   created,
   status
 from
-  okta_application_user;
+  okta_app_user;
 ```
 
 ### List users that are not assigned to any application
 
 ```sql
 select
-  u.id as id,
-  u.login as login,
-  u.created as created,
-  u.status as status
+  usr.id as id,
+  usr.login as login,
+  usr.created as created,
+  usr.status as status
 from
-  okta_user u
-full outer join okta_application_user au on u.id = au.id
+  okta_user usr
+full outer join okta_app_user au on usr.id = au.id
 where
-  u.id is null or au.id is null;
+  usr.id is null or au.id is null;
 ```
 
 ### List applications with assigned user details
 
 ```sql
 select
-  a.name as app_name,
-  a.id as app_id,
-  a.label as app_label,
-  a.created as app_created,
-  a.status as app_status,
+  app.name as app_name,
+  app.id as app_id,
+  app.label as app_label,
+  app.created as app_created,
+  app.status as app_status,
   au.id as user_id,
-  u.login as user_login,
-  u.created as user_created,
-  u.status as user_status
+  usr.login as user_login,
+  usr.created as user_created,
+  usr.status as user_status
 from
-  okta_application a
-left join okta_application_user au on a.id = au.app_id
-left join okta_user u on au.id = u.id;
+  okta_application app
+left join okta_app_user au on app.id = au.app_id
+left join okta_user usr on au.id = usr.id;
 ```
