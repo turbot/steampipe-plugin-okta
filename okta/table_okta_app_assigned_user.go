@@ -15,7 +15,7 @@ import (
 
 func tableOktaApplicationUser() *plugin.Table {
 	return &plugin.Table{
-		Name:        "okta_app_user",
+		Name:        "okta_app_assigned_user",
 		Description: "Represents all assigned users for applications.",
 		Get: &plugin.GetConfig{
 			Hydrate:           getOktaApplicationUser,
