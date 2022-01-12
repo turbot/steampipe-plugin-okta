@@ -124,13 +124,9 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Debug("getOktaApplication")
-	var appId string
-	if h.Item != nil {
-		appId = h.Item.(*okta.Application).Id
-	} else {
-		appId = d.KeyColumnQuals["id"].GetStringValue()
-	}
+	appId := d.KeyColumnQuals["id"].GetStringValue()
 
+	// Empty check for appId
 	if appId == "" {
 		return nil, nil
 	}
@@ -140,9 +136,8 @@ func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 		logger.Error("getOktaApplication", "connect", err)
 		return nil, err
 	}
-
-	var application okta.App
-	app, _, err := client.Application.GetApplication(ctx, appId, application, &query.Params{})
+	
+	app, _, err := client.Application.GetApplication(ctx, appId, okta.NewApplication(), &query.Params{})
 	if err != nil {
 		logger.Error("getOktaApplication", "get application", err)
 		return nil, err
