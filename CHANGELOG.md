@@ -1,3 +1,20 @@
+## v0.3.0 [2022-01-12]
+
+_What's new?_
+
+- New tables added
+  - [okta_app_assigned_group](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_app_assigned_group) ([#50](https://github.com/turbot/steampipe-plugin-okta/pull/50))
+  - [okta_app_assigned_user](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_app_assigned_user) ([#51](https://github.com/turbot/steampipe-plugin-okta/pull/51))
+
+_Enhancements_
+
+-  Recompiled plugin with [steampipe-plugin-sdk-v1.8.3](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v183--2021-12-23) ([#55](https://github.com/turbot/steampipe-plugin-okta/pull/55))
+
+_Bug fixes_
+
+- Removed columns `assigned_users` and `assigned_groups` from `okta_application` table ([#53](https://github.com/turbot/steampipe-plugin-okta/pull/53))
+- Fixed the `okta_application` table to correctly return okta application details instead of throwing an error ([#46](https://github.com/turbot/steampipe-plugin-okta/pull/46))
+
 ## v0.2.0 [2021-12-15]
 
 _Enhancements_
