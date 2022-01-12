@@ -51,8 +51,6 @@ func tableOktaApplication() *plugin.Table {
 			{Name: "visibility", Type: proto.ColumnType_JSON, Description: "Visibility settings for app."},
 			{Name: "credentials", Type: proto.ColumnType_JSON, Description: "Credentials for the specified signOnMode."},
 			{Name: "accessibility", Type: proto.ColumnType_JSON, Description: "Access settings for app."},
-			{Name: "assigned_users", Type: proto.ColumnType_JSON, Description: "List of users assigned to the application.", Hydrate: getUsersAssignedToApplication, Transform: transform.FromValue()},
-			{Name: "assigned_groups", Type: proto.ColumnType_JSON, Description: "List of groups assigned to the application.", Hydrate: getGroupsAssignedToApplication, Transform: transform.FromValue()},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
@@ -119,7 +117,7 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 	return nil, err
 }
 
-//// HYDRATE FUNCTIONS
+//// HYDRATE FUNCTION
 
 func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
@@ -144,66 +142,4 @@ func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	}
 
 	return app, nil
-}
-
-func getUsersAssignedToApplication(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	logger := plugin.Logger(ctx)
-	logger.Debug("getUsersAssignedToApplication")
-	var appId string
-
-	if h.Item != nil {
-		appId = h.Item.(*okta.Application).Id
-	} else {
-		appId = d.KeyColumnQuals["id"].GetStringValue()
-	}
-
-	// Empty check for appId
-	if appId == "" {
-		return nil, nil
-	}
-
-	client, err := Connect(ctx, d)
-	if err != nil {
-		logger.Error("getUsersAssignedToApplication", "connect", err)
-		return nil, err
-	}
-
-	appUser, _, err := client.Application.ListApplicationUsers(ctx, appId, &query.Params{})
-	if err != nil {
-		logger.Error("getUsersAssignedToApplication", "ListApplicationUsers_error", err)
-		return nil, err
-	}
-
-	return appUser, nil
-}
-
-func getGroupsAssignedToApplication(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	logger := plugin.Logger(ctx)
-	logger.Debug("getGroupsAssignedToApplication")
-	var appId string
-
-	if h.Item != nil {
-		appId = h.Item.(*okta.Application).Id
-	} else {
-		appId = d.KeyColumnQuals["id"].GetStringValue()
-	}
-
-	// Empty check for appId
-	if appId == "" {
-		return nil, nil
-	}
-
-	client, err := Connect(ctx, d)
-	if err != nil {
-		logger.Error("getGroupsAssignedToApplication", "connect", err)
-		return nil, err
-	}
-
-	groups, _, err := client.Application.ListApplicationGroupAssignments(ctx, appId, &query.Params{})
-	if err != nil {
-		logger.Error("getGroupsAssignedToApplication", "ListApplicationGroupAssignments_error", err)
-		return nil, err
-	}
-
-	return groups, nil
 }
