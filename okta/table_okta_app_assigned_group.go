@@ -37,6 +37,7 @@ func tableOktaApplicationAssignedGroup() *plugin.Table {
 
 			// JSON Columns
 			{Name: "links", Type: proto.ColumnType_JSON, Description: "The link details of the group."},
+			{Name: "profile", Type: proto.ColumnType_JSON, Description: "The profile details of the group."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Id"), Description: titleDescription},
