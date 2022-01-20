@@ -1,3 +1,9 @@
+## v0.4.0 [2022-01-20]
+
+_Enhancements_
+
+- Added column `profile` to the `okta_app_assigned_group` table ([#58](https://github.com/turbot/steampipe-plugin-okta/pull/58))
+
 ## v0.3.0 [2022-01-12]
 
 _What's new?_
