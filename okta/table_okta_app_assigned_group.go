@@ -55,18 +55,12 @@ type AppGroupInfo struct {
 func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("listApplicationAssignedGroups")
-	var appId string
+	appId := h.Item.(*okta.Application).Id
 
 	client, err := Connect(ctx, d)
 	if err != nil {
 		logger.Error("listApplicationAssignedGroups", "connect", err)
 		return nil, err
-	}
-
-	if h.Item != nil {
-		appId = h.Item.(*okta.Application).Id
-	} else {
-		appId = d.KeyColumnQuals["app_id"].GetStringValue()
 	}
 	
 	input := query.Params{
@@ -113,7 +107,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 
 func getApplicationAssignedGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getApplicationAssignedGroup")
+	logger.Trace("getApplicationAssignedGroup")
 	appId := d.KeyColumnQuals["app_id"].GetStringValue()
 	groupId := d.KeyColumnQuals["id"].GetStringValue()
 
