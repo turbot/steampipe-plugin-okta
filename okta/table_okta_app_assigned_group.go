@@ -114,7 +114,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 func getApplicationAssignedGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Debug("getApplicationAssignedGroup")
-	appId := d.KeyColumnQuals["user_id"].GetStringValue()
+	appId := d.KeyColumnQuals["app_id"].GetStringValue()
 	groupId := d.KeyColumnQuals["id"].GetStringValue()
 
 	if appId == "" || groupId == "" {
