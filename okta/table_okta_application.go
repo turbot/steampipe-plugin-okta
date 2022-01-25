@@ -72,7 +72,14 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 	equalQuals := d.KeyColumnQuals
 
 	var queryFilter string
-	filter := buildQueryFilter(equalQuals)
+	var filter []string
+
+	// Since app_id is a optional key qual in child table, okta_app_assigned_group,
+	// but not supported by the application API filter,
+	// without this check we will get error: 'Invalid search criteria'
+	if equalQuals["app_id"] == nil {
+		filter = buildQueryFilter(equalQuals)
+	}
 
 	if equalQuals["filter"] != nil {
 		queryFilter = equalQuals["filter"].GetStringValue()

@@ -24,6 +24,9 @@ func tableOktaApplicationAssignedGroup() *plugin.Table {
 		List: &plugin.ListConfig{
 			ParentHydrate: listOktaApplications,
 			Hydrate: listApplicationAssignedGroups,
+			KeyColumns: plugin.KeyColumnSlice{
+				{Name: "app_id", Require: plugin.Optional},
+			},
 		},
 
 		Columns: []*plugin.Column{
@@ -56,6 +59,11 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 	logger := plugin.Logger(ctx)
 	logger.Trace("listApplicationAssignedGroups")
 	appId := h.Item.(*okta.Application).Id
+	appIdQual := d.KeyColumnQuals["app_id"].GetStringValue()
+	
+	if appIdQual != "" && appIdQual != appId {
+		return nil, nil
+	}
 
 	client, err := Connect(ctx, d)
 	if err != nil {
@@ -75,7 +83,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 			input.Limit = *limit
 		}
 	}
-
+	
 	groups, resp, err := client.Application.ListApplicationGroupAssignments(ctx, appId, &input)
 	
 	if err != nil {
