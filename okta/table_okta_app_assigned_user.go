@@ -18,12 +18,15 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 		Name:        "okta_app_assigned_user",
 		Description: "Represents all assigned users for applications.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getApplicationAssignedUser,
-			KeyColumns:        plugin.AllColumns([]string{"id", "app_id"}),
+			Hydrate:    getApplicationAssignedUser,
+			KeyColumns: plugin.AllColumns([]string{"id", "app_id"}),
 		},
 		List: &plugin.ListConfig{
-			ParentHydrate: listOktaApplications,
-			Hydrate: listApplicationAssignedUsers,
+			ParentHydrate: getOrListOktaApplications,
+			Hydrate:       listApplicationAssignedUsers,
+			KeyColumns: plugin.KeyColumnSlice{
+				{Name: "app_id", Require: plugin.Optional},
+			},
 		},
 
 		Columns: []*plugin.Column{
@@ -57,7 +60,7 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 }
 
 type AppUserInfo struct {
-	AppId   string
+	AppId string
 	okta.AppUser
 }
 
@@ -66,20 +69,14 @@ type AppUserInfo struct {
 func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("listApplicationAssignedUsers")
-	var appId string
+	appId := h.Item.(*okta.Application).Id
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listApplicationAssignedUsers", "connect", err)
+		logger.Error("listApplicationAssignedUsers", "connect_error", err)
 		return nil, err
 	}
 
-	if h.Item != nil {
-		appId = h.Item.(*okta.Application).Id
-	} else {
-		appId = d.KeyColumnQuals["app_id"].GetStringValue()
-	}
-	
 	input := query.Params{
 		Limit: 500,
 	}
@@ -94,9 +91,9 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 	}
 
 	users, resp, err := client.Application.ListApplicationUsers(ctx, appId, &input)
-	
+
 	if err != nil {
-		logger.Error("listApplicationAssignedUsers", "error_ListApplicationUsers", err)
+		logger.Error("listApplicationAssignedUsers", "list_app_users_error", err)
 		return nil, err
 	}
 
@@ -109,7 +106,7 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 		var nextUserSet []*okta.AppUser
 		resp, err = resp.Next(ctx, &nextUserSet)
 		if err != nil {
-			logger.Error("listApplicationAssignedUsers", "error_ListApplicationUsers_paging", err)
+			logger.Error("listApplicationAssignedUsers", "list_app_users_paging_error", err)
 			return nil, err
 		}
 		for _, user := range nextUserSet {
@@ -125,7 +122,7 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 func getApplicationAssignedUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Debug("getApplicationAssignedUser")
-	appId := d.KeyColumnQuals["user_id"].GetStringValue()
+	appId := d.KeyColumnQuals["app_id"].GetStringValue()
 	userId := d.KeyColumnQuals["id"].GetStringValue()
 
 	if appId == "" || userId == "" {
@@ -134,13 +131,13 @@ func getApplicationAssignedUser(ctx context.Context, d *plugin.QueryData, h *plu
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getApplicationAssignedUser", "connect", err)
+		logger.Error("getApplicationAssignedUser", "connect_error", err)
 		return nil, err
 	}
 
 	user, _, err := client.Application.GetApplicationUser(ctx, appId, userId, &query.Params{})
 	if err != nil {
-		logger.Error("getApplicationAssignedUser", "error_GetApplicationUser", err)
+		logger.Error("getApplicationAssignedUser", "get_app_user_error", err)
 		return nil, err
 	}
 
