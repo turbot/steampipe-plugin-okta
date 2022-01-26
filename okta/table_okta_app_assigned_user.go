@@ -69,18 +69,12 @@ type AppUserInfo struct {
 func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("listApplicationAssignedUsers")
-	var appId string
+	appId := h.Item.(*okta.Application).Id
 
 	client, err := Connect(ctx, d)
 	if err != nil {
 		logger.Error("listApplicationAssignedUsers", "connect_error", err)
 		return nil, err
-	}
-
-	if h.Item != nil {
-		appId = h.Item.(*okta.Application).Id
-	} else {
-		appId = d.KeyColumnQuals["app_id"].GetStringValue()
 	}
 
 	input := query.Params{

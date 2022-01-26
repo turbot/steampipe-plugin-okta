@@ -2,6 +2,7 @@ package okta
 
 import (
 	"context"
+	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -146,7 +147,7 @@ func getOrListOktaApplications(ctx context.Context, d *plugin.QueryData, h *plug
 		// The okta_application table uses the "id" column instead
 		d.KeyColumnQuals["id"] = d.KeyColumnQuals["app_id"]
 		app, err := getOktaApplication(ctx, d, h)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "Not found") {
 			logger.Error("getOrListOktaApplications", "get_application_error", err)
 			return nil, err
 		}
