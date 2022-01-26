@@ -64,22 +64,26 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaApplications", "connect", err)
+		logger.Error("listOktaApplications", "connect_error", err)
 		return nil, err
 	}
 
-	input := query.Params{}
-	equalQuals := d.KeyColumnQuals
-
-	var queryFilter string
-	var filter []string
-
-	// Since app_id is a optional key qual in child table, okta_app_assigned_group,
-	// but not supported by the application API filter,
-	// without this check we will get error: 'Invalid search criteria'
-	if equalQuals["app_id"] == nil {
-		filter = buildQueryFilter(equalQuals)
+	input := query.Params{
+		Limit: 200,
 	}
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < input.Limit {
+			input.Limit = *limit
+		}
+	}
+
+	equalQuals := d.KeyColumnQuals
+	filter := buildQueryFilter(equalQuals)
+	var queryFilter string
 
 	if equalQuals["filter"] != nil {
 		queryFilter = equalQuals["filter"].GetStringValue()
@@ -91,13 +95,9 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 		input.Filter = strings.Join(filter, " and ")
 	}
 
-	if input.Filter != "" {
-		plugin.Logger(ctx).Debug("Filter", "input.Filter", input.Filter)
-	}
-
 	applications, resp, err := client.Application.ListApplications(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaApplications", "list application", err)
+		logger.Error("listOktaApplications", "list_applications_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -106,6 +106,11 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 
 	for _, app := range applications {
 		d.StreamListItem(ctx, app)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -113,11 +118,16 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 		var nextApplicationSet []*okta.Application
 		resp, err = resp.Next(ctx, &nextApplicationSet)
 		if err != nil {
-			logger.Error("listOktaApplications", "list application paging", err)
+			logger.Error("listOktaApplications", "list_applications_paging_error", err)
 			return nil, err
 		}
 		for _, app := range nextApplicationSet {
 			d.StreamListItem(ctx, app)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -138,13 +148,13 @@ func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaApplication", "connect", err)
+		logger.Error("getOktaApplication", "connect_error", err)
 		return nil, err
 	}
-	
+
 	app, _, err := client.Application.GetApplication(ctx, appId, okta.NewApplication(), &query.Params{})
 	if err != nil {
-		logger.Error("getOktaApplication", "get application", err)
+		logger.Error("getOktaApplication", "get_application_error", err)
 		return nil, err
 	}
 

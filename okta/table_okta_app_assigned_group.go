@@ -18,12 +18,12 @@ func tableOktaApplicationAssignedGroup() *plugin.Table {
 		Name:        "okta_app_assigned_group",
 		Description: "Represents an application group assignment.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getApplicationAssignedGroup,
-			KeyColumns:        plugin.AllColumns([]string{"id", "app_id"}),
+			Hydrate:    getApplicationAssignedGroup,
+			KeyColumns: plugin.AllColumns([]string{"id", "app_id"}),
 		},
 		List: &plugin.ListConfig{
-			ParentHydrate: listOktaApplications,
-			Hydrate: listApplicationAssignedGroups,
+			ParentHydrate: getOrListOktaApplications,
+			Hydrate:       listApplicationAssignedGroups,
 			KeyColumns: plugin.KeyColumnSlice{
 				{Name: "app_id", Require: plugin.Optional},
 			},
@@ -49,7 +49,7 @@ func tableOktaApplicationAssignedGroup() *plugin.Table {
 }
 
 type AppGroupInfo struct {
-	AppId   string
+	AppId string
 	okta.ApplicationGroupAssignment
 }
 
@@ -59,18 +59,13 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 	logger := plugin.Logger(ctx)
 	logger.Trace("listApplicationAssignedGroups")
 	appId := h.Item.(*okta.Application).Id
-	appIdQual := d.KeyColumnQuals["app_id"].GetStringValue()
-	
-	if appIdQual != "" && appIdQual != appId {
-		return nil, nil
-	}
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listApplicationAssignedGroups", "connect", err)
+		logger.Error("listApplicationAssignedGroups", "connect_error", err)
 		return nil, err
 	}
-	
+
 	input := query.Params{
 		Limit: 200,
 	}
@@ -83,11 +78,11 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 			input.Limit = *limit
 		}
 	}
-	
+
 	groups, resp, err := client.Application.ListApplicationGroupAssignments(ctx, appId, &input)
-	
+
 	if err != nil {
-		logger.Error("listApplicationAssignedGroups", "error_ListApplicationGroupAssignments", err)
+		logger.Error("listApplicationAssignedGroups", "list_app_groups_error", err)
 		return nil, err
 	}
 
@@ -100,7 +95,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 		var nextGroupSet []*okta.ApplicationGroupAssignment
 		resp, err = resp.Next(ctx, &nextGroupSet)
 		if err != nil {
-			logger.Error("listApplicationAssignedGroups", "error_ListApplicationGroupAssignments_paging", err)
+			logger.Error("listApplicationAssignedGroups", "list_app_groups_paging_error", err)
 			return nil, err
 		}
 		for _, group := range nextGroupSet {
@@ -125,15 +120,45 @@ func getApplicationAssignedGroup(ctx context.Context, d *plugin.QueryData, h *pl
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getApplicationAssignedGroup", "connect", err)
+		logger.Error("getApplicationAssignedGroup", "connect_error", err)
 		return nil, err
 	}
 
 	group, _, err := client.Application.GetApplicationGroupAssignment(ctx, appId, groupId, &query.Params{})
 	if err != nil {
-		logger.Error("getApplicationAssignedGroup", "error_GetApplicationGroupAssignment", err)
+		logger.Error("getApplicationAssignedGroup", "get_app_group_error", err)
 		return nil, err
 	}
 
 	return AppGroupInfo{appId, *group}, nil
+}
+
+//// PARENT HYDRATE FUNCTION
+
+func getOrListOktaApplications(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	logger.Trace("getOrListOktaApplications")
+	appID := d.KeyColumnQuals["app_id"].GetStringValue()
+
+	// List application API doesn't support filtering by app ID, so call the get
+	// function to reduce API calls
+	if appID != "" {
+		// The okta_application table uses the "id" column instead
+		d.KeyColumnQuals["id"] = d.KeyColumnQuals["app_id"]
+		app, err := getOktaApplication(ctx, d, h)
+		if err != nil {
+			logger.Error("getOrListOktaApplications", "get_application_error", err)
+			return nil, err
+		}
+		d.StreamListItem(ctx, app)
+		return nil, nil
+	}
+
+	_, err := listOktaApplications(ctx, d, h)
+	if err != nil {
+		logger.Error("getOrListOktaApplications", "list_applications_error", err)
+		return nil, err
+	}
+
+	return nil, nil
 }
