@@ -58,9 +58,9 @@ func listOktaTrustedOrigins(ctx context.Context, d *plugin.QueryData, _ *plugin.
 	}
 
 	// Maximum limit isn't mentioned in the documentation
-	// Default maximum limit is set as 1000
+	// Default maximum limit is set as 200
 	input := query.Params{
-		Limit: 1000,
+		Limit: 200,
 	}
 
 	// If the requested number of items is less than the paging max limit
