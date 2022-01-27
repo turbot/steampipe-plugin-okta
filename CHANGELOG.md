@@ -1,3 +1,27 @@
+## v0.5.0 [2022-01-27]
+
+_Enhancements_
+
+- Added limit and context cancellation handling to the following tables ([#61](https://github.com/turbot/steampipe-plugin-okta/pull/61)) ([#63](https://github.com/turbot/steampipe-plugin-okta/pull/63))
+  - okta_app_assigned_group
+  - okta_app_assigned_user
+  - okta_application
+  - okta_auth_server
+  - okta_factor
+  - okta_group
+  - okta_idp_discovery_policy
+  - okta_network_zone
+  - okta_password_policy
+  - okta_signon_policy
+  - okta_trusted_origin
+  - okta_user
+  - okta_user_type
+
+_Bug fixes_
+
+- Updated `okta_app_assigned_group` and `okta_app_assigned_user` tables to hydrate more efficiently and reduce the number of API calls the tables make for accounts with a large number of applications ([#61](https://github.com/turbot/steampipe-plugin-okta/pull/61))
+- Fixed the `okta_app_assigned_group` and `okta_app_assigned_user` tables to correctly return assigned groups and users instead of empty results ([#61](https://github.com/turbot/steampipe-plugin-okta/pull/61))
+
 ## v0.4.0 [2022-01-20]
 
 _Enhancements_
