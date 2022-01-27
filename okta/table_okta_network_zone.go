@@ -54,21 +54,39 @@ func tableOktaNetworkZone() *plugin.Table {
 func listOktaNetworkZones(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
-
-	input := &query.Params{}
 	if err != nil {
-		logger.Error("listOktaNetworkZones", "connect", err)
+		logger.Error("listOktaNetworkZones", "connect_error", err)
 		return nil, err
 	}
 
-	networkZones, resp, err := client.NetworkZone.ListNetworkZones(ctx, input)
+	// Maximum limit isn't mentioned in the documentation
+	// Default maximum limit is set as 1000
+	input := query.Params{
+		Limit: 1000,
+	}
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < input.Limit {
+			input.Limit = *limit
+		}
+	}
+
+	networkZones, resp, err := client.NetworkZone.ListNetworkZones(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaNetworkZones", "list network zones", err)
+		logger.Error("listOktaNetworkZones", "list_network_zones_error", err)
 		return nil, err
 	}
 
 	for _, networkZone := range networkZones {
 		d.StreamListItem(ctx, networkZone)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -76,11 +94,16 @@ func listOktaNetworkZones(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 		var nextZoneSet []*okta.NetworkZone
 		resp, err = resp.Next(ctx, &nextZoneSet)
 		if err != nil {
-			logger.Error("listOktaNetworkZones", "list network zone paging", err)
+			logger.Error("listOktaNetworkZones", "list_network_zones_paging_error", err)
 			return nil, err
 		}
 		for _, networkZone := range nextZoneSet {
 			d.StreamListItem(ctx, networkZone)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -98,13 +121,13 @@ func getOktaNetworkZone(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 		return nil, nil
 	}
 	if err != nil {
-		logger.Error("getOktaNetworkZone", "connect", err)
+		logger.Error("getOktaNetworkZone", "connect_error", err)
 		return nil, err
 	}
 
 	networkZone, _, err := client.NetworkZone.GetNetworkZone(ctx, id)
 	if err != nil {
-		logger.Error("getOktaNetworkZone", "get network zone", err)
+		logger.Error("getOktaNetworkZone", "get_network_zone_error", err)
 		return nil, err
 	}
 

@@ -54,7 +54,7 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 
 	input := &query.Params{}
 	if err != nil {
-		logger.Error("listOktaPolicies", "connect", err)
+		logger.Error("listOktaPolicies", "connect_error", err)
 		return nil, err
 	}
 
@@ -68,12 +68,17 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 
 	policies, resp, err := listPoliciesWithSettings(ctx, *client, input)
 	if err != nil {
-		logger.Error("listPolicies", "list policies", err)
+		logger.Error("listPolicies", "list_policies_with_settings_error", err)
 		return nil, err
 	}
 
 	for _, policy := range policies {
 		d.StreamListItem(ctx, policy)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -81,11 +86,16 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listPolicies", "list policies paging", err)
+			logger.Error("listPolicies", "list_policies_with_settings_paging_error", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
 			d.StreamListItem(ctx, policy)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 

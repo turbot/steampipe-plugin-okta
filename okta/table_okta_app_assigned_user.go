@@ -18,8 +18,9 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 		Name:        "okta_app_assigned_user",
 		Description: "Represents all assigned users for applications.",
 		Get: &plugin.GetConfig{
-			Hydrate:    getApplicationAssignedUser,
-			KeyColumns: plugin.AllColumns([]string{"id", "app_id"}),
+			Hydrate:           getApplicationAssignedUser,
+			KeyColumns:        plugin.AllColumns([]string{"id", "app_id"}),
+			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
 		},
 		List: &plugin.ListConfig{
 			ParentHydrate: getOrListOktaApplications,
@@ -77,6 +78,8 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 		return nil, err
 	}
 
+	// Default maximum limit set as per documentation
+	// https://developer.okta.com/docs/reference/api/apps/#list-users-assigned-to-application
 	input := query.Params{
 		Limit: 500,
 	}
@@ -99,6 +102,11 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 
 	for _, user := range users {
 		d.StreamListItem(ctx, AppUserInfo{appId, *user})
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -111,6 +119,11 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 		}
 		for _, user := range nextUserSet {
 			d.StreamListItem(ctx, AppUserInfo{appId, *user})
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -121,7 +134,7 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 
 func getApplicationAssignedUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getApplicationAssignedUser")
+	logger.Trace("getApplicationAssignedUser")
 	appId := d.KeyColumnQuals["app_id"].GetStringValue()
 	userId := d.KeyColumnQuals["id"].GetStringValue()
 

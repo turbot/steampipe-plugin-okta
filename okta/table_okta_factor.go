@@ -61,7 +61,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaFactors", "connect", err)
+		logger.Error("listOktaFactors", "connect_error", err)
 		return nil, err
 	}
 
@@ -80,7 +80,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	factors, resp, err := client.UserFactor.ListFactors(ctx, userId)
 	if err != nil {
-		logger.Error("listOktaFactors", "Error", err)
+		logger.Error("listOktaFactors", "list_factors_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -93,6 +93,11 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 			UserName: userName,
 			Factor:   factor,
 		})
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -100,7 +105,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		var nextFactorSet []*okta.Factor
 		resp, err = resp.Next(ctx, &nextFactorSet)
 		if err != nil {
-			logger.Error("listOktaFactors", "list factor paging", err)
+			logger.Error("listOktaFactors", "list_factors_paging_error", err)
 			return nil, err
 		}
 		for _, factor := range nextFactorSet {
@@ -109,6 +114,11 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 				UserName: userName,
 				Factor:   *factor,
 			})
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -119,7 +129,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaFactor")
+	logger.Trace("getOktaFactor")
 	userId := d.KeyColumnQuals["user_id"].GetStringValue()
 	factorId := d.KeyColumnQuals["id"].GetStringValue()
 
@@ -129,12 +139,13 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaFactor", "connect", err)
+		logger.Error("getOktaFactor", "connect_error", err)
 		return nil, err
 	}
 
 	user, _, err := client.User.GetUser(ctx, userId)
 	if err != nil {
+		logger.Error("getOktaFactor", "get_user_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -147,7 +158,7 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	var factorInstance okta.Factor
 	factor, _, err := client.UserFactor.GetFactor(ctx, userId, factorId, factorInstance)
 	if err != nil {
-		logger.Error("getOktaFactor", "get factor", err)
+		logger.Error("getOktaFactor", "get_factor_error", err)
 		return nil, err
 	}
 

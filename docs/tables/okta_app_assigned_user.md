@@ -45,8 +45,8 @@ select
   usr.login as user_login,
   usr.created as user_created,
   usr.status as user_status
-from
-  okta_application app
-left join okta_app_assigned_user au on app.id = au.app_id
-left join okta_user usr on au.id = usr.id;
+from 
+  okta_application app 
+inner join okta_app_assigned_user au on app.id = au.app_id
+inner join okta_user usr on au.id = usr.id;
 ```

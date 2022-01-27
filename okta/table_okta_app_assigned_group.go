@@ -19,8 +19,9 @@ func tableOktaApplicationAssignedGroup() *plugin.Table {
 		Name:        "okta_app_assigned_group",
 		Description: "Represents an application group assignment.",
 		Get: &plugin.GetConfig{
-			Hydrate:    getApplicationAssignedGroup,
-			KeyColumns: plugin.AllColumns([]string{"id", "app_id"}),
+			Hydrate:           getApplicationAssignedGroup,
+			KeyColumns:        plugin.AllColumns([]string{"id", "app_id"}),
+			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
 		},
 		List: &plugin.ListConfig{
 			ParentHydrate: getOrListOktaApplications,
@@ -67,6 +68,8 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 		return nil, err
 	}
 
+	// Default maximum limit set as per documentation
+	// https://developer.okta.com/docs/reference/api/apps/#list-groups-assigned-to-application
 	input := query.Params{
 		Limit: 200,
 	}
@@ -89,6 +92,11 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 
 	for _, group := range groups {
 		d.StreamListItem(ctx, AppGroupInfo{appId, *group})
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -101,6 +109,11 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 		}
 		for _, group := range nextGroupSet {
 			d.StreamListItem(ctx, AppGroupInfo{appId, *group})
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 

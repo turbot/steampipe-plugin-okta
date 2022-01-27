@@ -68,6 +68,8 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 		return nil, err
 	}
 
+	// Default maximum limit set as per documentation
+	// https://developer.okta.com/docs/reference/api/apps/#list-applications
 	input := query.Params{
 		Limit: 200,
 	}
@@ -138,7 +140,7 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 
 func getOktaApplication(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaApplication")
+	logger.Trace("getOktaApplication")
 	appId := d.KeyColumnQuals["id"].GetStringValue()
 
 	// Empty check for appId

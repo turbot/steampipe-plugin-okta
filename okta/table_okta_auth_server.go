@@ -56,14 +56,28 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaAuthServers", "connect", err)
+		logger.Error("listOktaAuthServers", "connect_error", err)
 		return nil, err
 	}
 
-	input := query.Params{}
+	// Default maximum limit set as per documentation
+	// https://developer.okta.com/docs/reference/api/authorization-servers/#list-authorization-servers
+	input := query.Params{
+		Limit: 200,
+	}
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < input.Limit {
+			input.Limit = *limit
+		}
+	}
+
 	servers, resp, err := client.AuthorizationServer.ListAuthorizationServers(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaAuthServers", "list auth servers", err)
+		logger.Error("listOktaAuthServers", "list_auth_servers_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -72,6 +86,11 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 
 	for _, server := range servers {
 		d.StreamListItem(ctx, server)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -79,11 +98,16 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 		var nextAuthorizationServerSet []*okta.AuthorizationServer
 		resp, err = resp.Next(ctx, &nextAuthorizationServerSet)
 		if err != nil {
-			logger.Error("listOktaAuthServers", "list auth servers paging", err)
+			logger.Error("listOktaAuthServers", "list_auth_servers_paging_error", err)
 			return nil, err
 		}
 		for _, server := range nextAuthorizationServerSet {
 			d.StreamListItem(ctx, server)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -94,7 +118,7 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 
 func getOktaAuthServer(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaAuthServer")
+	logger.Trace("getOktaAuthServer")
 
 	authServerId := d.KeyColumnQuals["id"].GetStringValue()
 
@@ -104,13 +128,13 @@ func getOktaAuthServer(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaAuthServer", "connect", err)
+		logger.Error("getOktaAuthServer", "connect_error", err)
 		return nil, err
 	}
 
 	server, _, err := client.AuthorizationServer.GetAuthorizationServer(ctx, authServerId)
 	if err != nil {
-		logger.Error("getOktaAuthServer", "get auth server", err)
+		logger.Error("getOktaAuthServer", "get_auth_servers_error", err)
 		return nil, err
 	}
 
