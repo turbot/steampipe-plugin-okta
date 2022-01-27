@@ -1,3 +1,15 @@
+## v0.5.0 [2022-01-27]
+
+_Enhancements_
+
+- Added limit handling to `okta_application` table to reduce page size if `limit` is specified in the query while listing applications ([#61](https://github.com/turbot/steampipe-plugin-okta/pull/61))
+- TBD for context cancellation 
+
+_Bug fixes_
+
+- Updated `okta_app_assigned_group` and `okta_app_assigned_user` tables to hydrate more efficiently and reduce the number of API calls the tables make for accounts with a large number of okta applications ([#61](https://github.com/turbot/steampipe-plugin-okta/pull/61))
+- Fixed the `okta_app_assigned_group` to correctly return the groups that the application integrations are assigned to instead of an empty table ([#61](https://github.com/turbot/steampipe-plugin-okta/pull/61))
+
 ## v0.4.0 [2022-01-20]
 
 _Enhancements_
