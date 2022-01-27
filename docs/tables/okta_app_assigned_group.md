@@ -43,7 +43,7 @@ select
   grp.description as group_description,
   jsonb_pretty(grp.group_members) as group_members
 from
-  okta_application app 
+  okta_application app
 inner join okta_app_assigned_group ag on app.id = ag.app_id
 inner join okta_group grp on ag.id = grp.id;
 ```
