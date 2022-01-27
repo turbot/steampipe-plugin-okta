@@ -71,11 +71,25 @@ func listOktaGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaGroups", "connect", err)
+		logger.Error("listOktaGroups", "connect_error", err)
 		return nil, err
 	}
 
-	input := query.Params{}
+	// Default maximum limit set as per documentation
+	// https://developer.okta.com/docs/reference/api/groups/#list-groups
+	input := query.Params{
+		Limit: 10000,
+	}
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < input.Limit {
+			input.Limit = *limit
+		}
+	}
+
 	equalQuals := d.KeyColumnQuals
 	quals := d.Quals
 
@@ -101,18 +115,19 @@ func listOktaGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 		input.Filter = strings.Join(filter, " and ")
 	}
 
-	if input.Filter != "" {
-		plugin.Logger(ctx).Debug("Filter", "input.Filter", input.Filter)
-	}
-
 	groups, resp, err := client.Group.ListGroups(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaGroups", "list groups", err)
+		logger.Error("listOktaGroups", "list_groups_error", err)
 		return nil, err
 	}
 
-	for _, user := range groups {
-		d.StreamListItem(ctx, user)
+	for _, group := range groups {
+		d.StreamListItem(ctx, group)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -120,11 +135,16 @@ func listOktaGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 		var nextGroupSet []*okta.Group
 		resp, err = resp.Next(ctx, &nextGroupSet)
 		if err != nil {
-			logger.Error("listOktaGroups", "list group paging", err)
+			logger.Error("listOktaGroups", "list_groups_paging_error", err)
 			return nil, err
 		}
-		for _, user := range nextGroupSet {
-			d.StreamListItem(ctx, user)
+		for _, group := range nextGroupSet {
+			d.StreamListItem(ctx, group)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -135,7 +155,7 @@ func listOktaGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 
 func getOktaGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaGroup")
+	logger.Trace("getOktaGroup")
 
 	var groupId string
 	if h.Item != nil {
@@ -150,13 +170,13 @@ func getOktaGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDat
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaGroup", "connect", err)
+		logger.Error("getOktaGroup", "connect_error", err)
 		return nil, err
 	}
 
 	group, _, err := client.Group.GetGroup(ctx, groupId)
 	if err != nil {
-		logger.Error("getOktaGroup", "get group", err)
+		logger.Error("getOktaGroup", "get_group_error", err)
 		return nil, err
 	}
 
@@ -165,7 +185,7 @@ func getOktaGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDat
 
 func listGroupMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("listGroupMembers")
+	logger.Trace("listGroupMembers")
 
 	var groupId string
 	if h.Item != nil {
@@ -176,13 +196,13 @@ func listGroupMembers(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listGroupMembers", "connect", err)
+		logger.Error("listGroupMembers", "connect_error", err)
 		return nil, err
 	}
 
 	groupMembers, resp, err := client.Group.ListGroupUsers(ctx, groupId, &query.Params{})
 	if err != nil {
-		logger.Error("listGroupMembers", "get group", err)
+		logger.Error("listGroupMembers", "list_group_users_error", err)
 		return nil, err
 	}
 
@@ -191,7 +211,7 @@ func listGroupMembers(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 		var nextgroupMembersSet []*okta.User
 		resp, err = resp.Next(ctx, &groupMembers)
 		if err != nil {
-			logger.Error("listOktaGroups", "list group paging", err)
+			logger.Error("listOktaGroups", "list_group_users_paging_error", err)
 			return nil, err
 		}
 		groupMembers = append(groupMembers, nextgroupMembersSet...)

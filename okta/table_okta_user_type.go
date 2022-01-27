@@ -52,13 +52,13 @@ func listOktaUserTypes(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaUserTypes", "connect", err)
+		logger.Error("listOktaUserTypes", "connect_error", err)
 		return nil, err
 	}
 
 	userTypes, resp, err := client.UserType.ListUserTypes(ctx)
 	if err != nil {
-		logger.Error("listOktaUserTypes", "list users", err)
+		logger.Error("listOktaUserTypes", "list_user_types_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -67,6 +67,11 @@ func listOktaUserTypes(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 
 	for _, userType := range userTypes {
 		d.StreamListItem(ctx, userType)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -74,11 +79,16 @@ func listOktaUserTypes(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 		var nextUserTypeSet []*okta.UserType
 		resp, err = resp.Next(ctx, &nextUserTypeSet)
 		if err != nil {
-			logger.Error("listOktaUserTypes", "list user paging", err)
+			logger.Error("listOktaUserTypes", "list_user_types_paging_error", err)
 			return nil, err
 		}
 		for _, user := range nextUserTypeSet {
 			d.StreamListItem(ctx, user)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -89,7 +99,7 @@ func listOktaUserTypes(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 
 func getOktaUserType(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaUserType")
+	logger.Trace("getOktaUserType")
 
 	userTypeId := d.KeyColumnQuals["id"].GetStringValue()
 
@@ -99,13 +109,13 @@ func getOktaUserType(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaUserType", "connect", err)
+		logger.Error("getOktaUserType", "connect_error", err)
 		return nil, err
 	}
 
 	userType, _, err := client.UserType.GetUserType(ctx, userTypeId)
 	if err != nil {
-		logger.Error("getOktaUserType", "get user type", err)
+		logger.Error("getOktaUserType", "get_user_type_error", err)
 		return nil, err
 	}
 

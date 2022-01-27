@@ -47,7 +47,7 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 	client, err := Connect(ctx, d)
 	input := &query.Params{}
 	if err != nil {
-		logger.Error("listOktaIdpDiscoveryPolicies", "connect", err)
+		logger.Error("listOktaIdpDiscoveryPolicies", "connect_error", err)
 		return nil, err
 	}
 	if d.Table.Name == "okta_idp_discovery_policy" {
@@ -56,22 +56,32 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 	}
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
-		logger.Error("listOktaIdpDiscoveryPolicies", "list policies", err)
+		logger.Error("listOktaIdpDiscoveryPolicies", "list_policies_error", err)
 		return nil, err
 	}
 	for _, policy := range policies {
 		d.StreamListItem(ctx, policy)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 	// paging
 	for resp.HasNextPage() {
 		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaIdpDiscoveryPolicies", "list policies paging", err)
+			logger.Error("listOktaIdpDiscoveryPolicies", "list_policies_paging_error", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
 			d.StreamListItem(ctx, policy)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 	return nil, err

@@ -53,19 +53,38 @@ func listOktaTrustedOrigins(ctx context.Context, d *plugin.QueryData, _ *plugin.
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaTrustedOrigins", "connect", err)
+		logger.Error("listOktaTrustedOrigins", "connect_error", err)
 		return nil, err
 	}
 
-	input := query.Params{}
+	// Maximum limit isn't mentioned in the documentation
+	// Default maximum limit is set as 200
+	input := query.Params{
+		Limit: 200,
+	}
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < input.Limit {
+			input.Limit = *limit
+		}
+	}
+
 	origins, resp, err := client.TrustedOrigin.ListOrigins(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaTrustedOrigins", "list trusted origins", err)
+		logger.Error("listOktaTrustedOrigins", "list_origins_error", err)
 		return nil, err
 	}
 
 	for _, origin := range origins {
 		d.StreamListItem(ctx, origin)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -73,11 +92,16 @@ func listOktaTrustedOrigins(ctx context.Context, d *plugin.QueryData, _ *plugin.
 		var nextOriginSet []*okta.TrustedOrigin
 		resp, err = resp.Next(ctx, &nextOriginSet)
 		if err != nil {
-			logger.Error("listOktaTrustedOrigins", "list trusted origins paging", err)
+			logger.Error("listOktaTrustedOrigins", "list_origins_paging_error", err)
 			return nil, err
 		}
 		for _, origin := range nextOriginSet {
 			d.StreamListItem(ctx, origin)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -88,7 +112,7 @@ func listOktaTrustedOrigins(ctx context.Context, d *plugin.QueryData, _ *plugin.
 
 func getOktaTrustedOrigin(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaTrustedOrigin")
+	logger.Trace("getOktaTrustedOrigin")
 
 	trustedOriginId := d.KeyColumnQuals["id"].GetStringValue()
 
@@ -98,13 +122,13 @@ func getOktaTrustedOrigin(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaTrustedOrigin", "connect", err)
+		logger.Error("getOktaTrustedOrigin", "connect_error", err)
 		return nil, err
 	}
-	
+
 	app, _, err := client.TrustedOrigin.GetOrigin(ctx, trustedOriginId)
 	if err != nil {
-		logger.Error("getOktaTrustedOrigin", "get trusted origin", err)
+		logger.Error("getOktaTrustedOrigin", "get_origin_error", err)
 		return nil, err
 	}
 

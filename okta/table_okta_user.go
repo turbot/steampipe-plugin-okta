@@ -85,11 +85,25 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaUsers", "connect", err)
+		logger.Error("listOktaUsers", "connect_error", err)
 		return nil, err
 	}
 
-	input := query.Params{}
+	// Default maximum limit set as per documentation
+	// https://developer.okta.com/docs/reference/api/users/#request-parameters-3
+	input := query.Params{
+		Limit: 200,
+	}
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < input.Limit {
+			input.Limit = *limit
+		}
+	}
+
 	equalQuals := d.KeyColumnQuals
 	quals := d.Quals
 
@@ -115,18 +129,19 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 		input.Filter = strings.Join(filter, " and ")
 	}
 
-	if input.Filter != "" {
-		plugin.Logger(ctx).Debug("Filter", "input.Filter", input.Filter)
-	}
-
 	users, resp, err := client.User.ListUsers(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaUsers", "list users", err)
+		logger.Error("listOktaUsers", "list_users_error", err)
 		return nil, err
 	}
 
 	for _, user := range users {
 		d.StreamListItem(ctx, user)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	// paging
@@ -134,11 +149,16 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 		var nextUserSet []*okta.User
 		resp, err = resp.Next(ctx, &nextUserSet)
 		if err != nil {
-			logger.Error("listOktaUsers", "list user paging", err)
+			logger.Error("listOktaUsers", "list_users_paging_error", err)
 			return nil, err
 		}
 		for _, user := range nextUserSet {
 			d.StreamListItem(ctx, user)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -149,7 +169,7 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 
 func getOktaUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("getOktaUser")
+	logger.Trace("getOktaUser")
 	var userId string
 	if h.Item != nil {
 		userId = h.Item.(*okta.User).Id
@@ -163,13 +183,13 @@ func getOktaUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaUser", "connect", err)
+		logger.Error("getOktaUser", "connect_error", err)
 		return nil, err
 	}
 
 	user, _, err := client.User.GetUser(ctx, userId)
 	if err != nil {
-		logger.Error("getOktaUser", "get user", err)
+		logger.Error("getOktaUser", "get_user_error", err)
 		return nil, err
 	}
 
@@ -178,17 +198,17 @@ func getOktaUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 
 func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("listUserGroups")
+	logger.Trace("listUserGroups")
 	user := h.Item.(*okta.User)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listUserGroups", "connect", err)
+		logger.Error("listUserGroups", "connect_error", err)
 		return nil, err
 	}
 
 	groups, resp, err := client.User.ListUserGroups(ctx, user.Id)
 	if err != nil {
-		logger.Error("listUserGroups", "list user groups", err)
+		logger.Error("listUserGroups", "list_user_groups_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -199,7 +219,7 @@ func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 		var nextGroupSet []*okta.Group
 		resp, err = resp.Next(ctx, &nextGroupSet)
 		if err != nil {
-			logger.Error("listUserGroups", "list user groups paging", err)
+			logger.Error("listUserGroups", "list_user_groups_paging_error", err)
 			return nil, err
 		}
 		groups = append(groups, nextGroupSet...)
@@ -210,17 +230,17 @@ func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 
 func listAssignedRolesForUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Debug("listAssignedRolesForUser")
+	logger.Trace("listAssignedRolesForUser")
 	user := h.Item.(*okta.User)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listUserGroups", "connect", err)
+		logger.Error("listUserGroups", "connect_error", err)
 		return nil, err
 	}
 
 	roles, resp, err := client.User.ListAssignedRolesForUser(ctx, user.Id, &query.Params{})
 	if err != nil {
-		logger.Error("listAssignedRolesForUser", "list assigned roles for user", err)
+		logger.Error("listAssignedRolesForUser", "list_assigned_roles_for_user_error", err)
 		return nil, err
 	}
 
@@ -228,7 +248,7 @@ func listAssignedRolesForUser(ctx context.Context, d *plugin.QueryData, h *plugi
 		var nextRolesSet []*okta.Role
 		resp, err = resp.Next(ctx, &nextRolesSet)
 		if err != nil {
-			logger.Error("listAssignedRolesForUser", "list assigned roles for user paging", err)
+			logger.Error("listAssignedRolesForUser", "list_assigned_roles_for_user_paging_error", err)
 			return nil, err
 		}
 		roles = append(roles, nextRolesSet...)

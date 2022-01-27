@@ -44,6 +44,6 @@ select
   jsonb_pretty(grp.group_members) as group_members
 from
   okta_application app
-left join okta_app_assigned_group ag on app.id = ag.app_id
-left join okta_group grp on ag.id = grp.id;
+inner join okta_app_assigned_group ag on app.id = ag.app_id
+inner join okta_group grp on ag.id = grp.id;
 ```
