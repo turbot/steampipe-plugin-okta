@@ -94,7 +94,7 @@ func listOktaGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 	quals := d.Quals
 
 	var queryFilter string
-	filter := buildQueryFilter(equalQuals)
+	filter := buildQueryFilter(equalQuals, []string{"id", "type", "last_updated", "last_membership_updated"})
 
 	// TODO - optimize or move it to a utility function
 	// https://developer.okta.com/docs/reference/api-overview/#operators

@@ -34,7 +34,7 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 
 			// JSON Columns
 			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
-			{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromField("Embedded.rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
+			{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromP(getpolicyRules, "rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
@@ -45,7 +45,11 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
-	input := &query.Params{}
+
+	input := &query.Params{
+		Limit: 200,
+	}
+
 	if err != nil {
 		logger.Error("listOktaIdpDiscoveryPolicies", "connect_error", err)
 		return nil, err
@@ -69,7 +73,7 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 	}
 	// paging
 	for resp.HasNextPage() {
-		var nextPolicySet []*okta.Policy
+		var nextPolicySet []*okta.AuthorizationServerPolicy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
 			logger.Error("listOktaIdpDiscoveryPolicies", "list_policies_paging_error", err)
@@ -85,4 +89,16 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 		}
 	}
 	return nil, err
+}
+
+//// TRANSFORM FUNCTION
+
+func getpolicyRules(_ context.Context, d *transform.TransformData) (interface{}, error) {
+	policy := d.HydrateItem.(*okta.AuthorizationServerPolicy)
+
+	if policy.Embedded != nil {
+		rules := policy.Embedded.(map[string]interface{})
+		return rules["rules"], nil
+	}
+	return nil, nil
 }

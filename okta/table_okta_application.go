@@ -84,7 +84,7 @@ func listOktaApplications(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 	}
 
 	equalQuals := d.KeyColumnQuals
-	filter := buildQueryFilter(equalQuals)
+	filter := buildQueryFilter(equalQuals, []string{"name", "status"})
 	var queryFilter string
 
 	if equalQuals["filter"] != nil {

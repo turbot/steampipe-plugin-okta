@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/turbot/go-kit/helpers"
+	"github.com/turbot/go-kit/types"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
 
@@ -25,6 +27,9 @@ func tableOktaFactor() *plugin.Table {
 		List: &plugin.ListConfig{
 			ParentHydrate: listOktaUsers,
 			Hydrate:       listOktaFactors,
+			KeyColumns: []*plugin.KeyColumn{
+				{Name: "user_id", Require: plugin.Optional},
+			},
 		},
 		Columns: []*plugin.Column{
 			// Top Columns
@@ -72,6 +77,19 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		userId = userData.Id
 		userProfile := *userData.Profile
 		userName = userProfile["login"].(string)
+	}
+
+	// Minimize the API call with the given user id
+	if d.KeyColumnQuals["user_id"] != nil {
+		if d.KeyColumnQualString("user_id") != "" {
+			if d.KeyColumnQualString("user_id") != "" && d.KeyColumnQualString("user_id") != userId {
+				return nil, nil
+			}
+		} else if len(getListValues(d.KeyColumnQuals["user_id"].GetListValue())) > 0 {
+			if !helpers.StringSliceContains(types.StringValueSlice(getListValues(d.KeyColumnQuals["user_id"].GetListValue())), userId) {
+				return nil, nil
+			}
+		}
 	}
 
 	if userId == "" {

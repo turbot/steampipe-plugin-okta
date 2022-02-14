@@ -4,6 +4,9 @@ import (
 	"fmt"
 
 	"github.com/ettle/strcase"
+	"github.com/turbot/go-kit/helpers"
+	"github.com/turbot/go-kit/types"
+	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
 
@@ -24,13 +27,21 @@ var (
 	}
 )
 
+func getListValues(listValue *proto.QualValueList) []*string {
+	values := make([]*string, 0)
+	for _, value := range listValue.Values {
+		values = append(values, types.String(value.GetStringValue()))
+	}
+	return values
+}
+
 //// other useful functions
 
-func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap) []string {
+func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap, filterKeys []string) []string {
 	filters := []string{}
 
 	for k, v := range equalQuals {
-		if v != nil {
+		if v != nil && helpers.StringSliceContains(filterKeys, k){
 			filters = append(filters, fmt.Sprintf("%s eq \"%s\"", strcase.ToCamel(k), v.GetStringValue()))
 		}
 	}
