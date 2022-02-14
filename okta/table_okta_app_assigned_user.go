@@ -29,7 +29,6 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 				{Name: "app_id", Require: plugin.Optional},
 				{Name: "user_name", Require: plugin.Optional},
 				{Name: "first_name", Require: plugin.Optional},
-				{Name: "last_name", Require: plugin.Optional},
 				{Name: "email", Require: plugin.Optional},
 			},
 		},
@@ -92,8 +91,6 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 		input.Q = d.KeyColumnQualString("user_name")
 	} else if d.KeyColumnQualString("first_name") != "" {
 		input.Q = d.KeyColumnQualString("first_name")
-	} else if d.KeyColumnQualString("last_name") != "" {
-		input.Q = d.KeyColumnQualString("last_name")
 	} else if d.KeyColumnQualString("email") != "" {
 		input.Q = d.KeyColumnQualString("email")
 	}
