@@ -1,3 +1,10 @@
+## v0.6.0 [2022-04-27]
+
+_Enhancements_
+
+- Added support for native Linux ARM and Mac M1 builds. ([#69](https://github.com/turbot/steampipe-plugin-okta/pull/69))
+- Recompiled plugin with [steampipe-plugin-sdk v3.1.0](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v310--2022-03-30) and Go version `1.18`. ([#68](https://github.com/turbot/steampipe-plugin-okta/pull/68))
+
 ## v0.5.0 [2022-01-27]
 
 _Enhancements_
