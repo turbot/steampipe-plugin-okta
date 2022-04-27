@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ettle/strcase"
-	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
 )
 
 const (
