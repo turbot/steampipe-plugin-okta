@@ -75,7 +75,7 @@ connection "okta" {
   # Or use an Okta application and the client credentials flow for authenticating: https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/
   # domain      = "https://<your_okta_domain>.okta.com"
   # client_id   = "0oa10zpa2bo6tAm9Test"
-  # private_key = "-----BEGIN RSA PRIVATE KEY-----MIIEpAIBAAK..."
+  # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 }
 ```
 
@@ -116,5 +116,5 @@ export OKTA_CLIENT_TOKEN=02d0YZgNSJwlNew6lZG-6qGThisisatest-token
 ```sh
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
 export OKTA_CLIENT_CLIENTID=0oa10zpa2bo6tAm9Test
-export OKTA_CLIENT_PRIVATEKEY="-----BEGIN RSA PRIVATE KEY-----MIIEpAIBAAK..."
+export OKTA_CLIENT_PRIVATEKEY="-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 ```
