@@ -75,7 +75,8 @@ connection "okta" {
   # Or use an Okta application and the client credentials flow for authenticating: https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/
   # domain      = "https://<your_okta_domain>.okta.com"
   # client_id   = "0oa10zpa2bo6tAm9Test"
-  # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
+  # private_key = "-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAK..."
 }
 ```
 
@@ -96,7 +97,7 @@ If using the Okta service application, the following scopes must be enabled for 
 ## Get involved
 
 - Open source: https://github.com/turbot/steampipe-plugin-okta
-- Community: [Slack Channel](https://join.slack.com/t/steampipe/shared_invite/zt-oij778tv-lYyRTWOTMQYBVAbtPSWs3g)
+- Community: [Slack Channel](https://steampipe.io/community/join)
 
 ## Configuring Okta Credentials
 
@@ -116,5 +117,6 @@ export OKTA_CLIENT_TOKEN=02d0YZgNSJwlNew6lZG-6qGThisisatest-token
 ```sh
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
 export OKTA_CLIENT_CLIENTID=0oa10zpa2bo6tAm9Test
-export OKTA_CLIENT_PRIVATEKEY="-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
+export OKTA_CLIENT_PRIVATEKEY="-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAK..."
 ```
