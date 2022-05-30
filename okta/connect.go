@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
 )
 
 func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {

@@ -6,8 +6,8 @@ import (
 	"github.com/ettle/strcase"
 	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/go-kit/types"
-	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v3/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
 )
 
 const (
@@ -41,7 +41,7 @@ func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap, filterKeys []str
 	filters := []string{}
 
 	for k, v := range equalQuals {
-		if v != nil && helpers.StringSliceContains(filterKeys, k){
+		if v != nil && helpers.StringSliceContains(filterKeys, k) {
 			filters = append(filters, fmt.Sprintf("%s eq \"%s\"", strcase.ToCamel(k), v.GetStringValue()))
 		}
 	}

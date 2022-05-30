@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/turbot/go-kit/types"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"github.com/turbot/go-kit/helpers"
-	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
+	"github.com/turbot/go-kit/types"
+	"github.com/turbot/steampipe-plugin-sdk/v3/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v3/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
 )
 
 //// TABLE DEFINITION

@@ -96,7 +96,7 @@ If using the Okta service application, the following scopes must be enabled for 
 ## Get involved
 
 - Open source: https://github.com/turbot/steampipe-plugin-okta
-- Community: [Slack Channel](https://join.slack.com/t/steampipe/shared_invite/zt-oij778tv-lYyRTWOTMQYBVAbtPSWs3g)
+- Community: [Slack Channel](https://steampipe.io/community/join)
 
 ## Configuring Okta Credentials
 

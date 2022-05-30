@@ -3,7 +3,7 @@ package okta
 import (
 	"strings"
 
-	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
 )
 
 // function which returns an ErrorPredicate for Okta API calls
