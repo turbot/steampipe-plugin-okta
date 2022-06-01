@@ -6,6 +6,8 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/turbot/go-kit/helpers"
+	"github.com/turbot/go-kit/types"
 	"github.com/turbot/steampipe-plugin-sdk/v3/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v3/plugin/transform"
 
@@ -66,6 +68,20 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 	if err != nil {
 		logger.Error("listApplicationAssignedGroups", "connect_error", err)
 		return nil, err
+	}
+
+	equalQuals := d.KeyColumnQuals
+	// Minimize the API call with the given application id
+	if equalQuals["app_id"] != nil {
+		if equalQuals["app_id"].GetStringValue() != "" {
+			if equalQuals["app_id"].GetStringValue() != "" && equalQuals["app_id"].GetStringValue() != appId {
+				return nil, nil
+			}
+		} else if len(getListValues(equalQuals["app_id"].GetListValue())) > 0 {
+			if !helpers.StringSliceContains(types.StringValueSlice(getListValues(equalQuals["app_id"].GetListValue())), appId) {
+				return nil, nil
+			}
+		}
 	}
 
 	// Default maximum limit set as per documentation

@@ -27,6 +27,9 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 			Hydrate:       listApplicationAssignedUsers,
 			KeyColumns: plugin.KeyColumnSlice{
 				{Name: "app_id", Require: plugin.Optional},
+				{Name: "user_name", Require: plugin.Optional},
+				{Name: "first_name", Require: plugin.Optional},
+				{Name: "email", Require: plugin.Optional},
 			},
 		},
 
@@ -80,8 +83,16 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 
 	// Default maximum limit set as per documentation
 	// https://developer.okta.com/docs/reference/api/apps/#list-users-assigned-to-application
-	input := query.Params{
+	input := &query.Params{
 		Limit: 500,
+	}
+
+	if d.KeyColumnQualString("user_name") != "" {
+		input.Q = d.KeyColumnQualString("user_name")
+	} else if d.KeyColumnQualString("first_name") != "" {
+		input.Q = d.KeyColumnQualString("first_name")
+	} else if d.KeyColumnQualString("email") != "" {
+		input.Q = d.KeyColumnQualString("email")
 	}
 
 	// If the requested number of items is less than the paging max limit
@@ -93,7 +104,7 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 		}
 	}
 
-	users, resp, err := client.Application.ListApplicationUsers(ctx, appId, &input)
+	users, resp, err := client.Application.ListApplicationUsers(ctx, appId, input)
 
 	if err != nil {
 		logger.Error("listApplicationAssignedUsers", "list_app_users_error", err)

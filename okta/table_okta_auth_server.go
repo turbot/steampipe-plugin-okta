@@ -25,6 +25,9 @@ func tableOktaAuthServer() *plugin.Table {
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaAuthServers,
+			KeyColumns: plugin.KeyColumnSlice{
+				{Name: "name", Require: plugin.Optional},
+			},
 		},
 
 		Columns: []*plugin.Column{
@@ -64,6 +67,10 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 	// https://developer.okta.com/docs/reference/api/authorization-servers/#list-authorization-servers
 	input := query.Params{
 		Limit: 200,
+	}
+
+	if d.KeyColumnQualString("name") != "" {
+		input.Q = d.KeyColumnQualString("name")
 	}
 
 	// If the requested number of items is less than the paging max limit
