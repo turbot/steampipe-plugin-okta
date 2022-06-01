@@ -1,3 +1,16 @@
+## v0.7.0 [2022-06-01]
+
+_Enhancements_
+
+- Added additional optional key quals, limits, filter support, and context cancellation handling to the following tables: ([#66](https://github.com/turbot/steampipe-plugin-okta/pull/66))
+  - okta_app_assigned_group
+  - okta_app_assigned_user
+  - okta_application
+  - okta_auth_server
+  - okta_factor
+  - okta_group
+  - okta_idp_discovery_policy
+
 ## v0.6.1 [2022-05-23]
 
 _Bug fixes_
