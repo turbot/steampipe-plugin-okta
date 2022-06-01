@@ -2,7 +2,7 @@
 
 _Enhancements_
 
-- Added additional optional key quals, limits, filter support, and context cancellation handling to the following tables: ([#66](https://github.com/turbot/steampipe-plugin-okta/pull/66))
+- Added additional optional key quals, page limits, filter support, and context cancellation handling to the following tables: ([#66](https://github.com/turbot/steampipe-plugin-okta/pull/66))
   - okta_app_assigned_group
   - okta_app_assigned_user
   - okta_application
