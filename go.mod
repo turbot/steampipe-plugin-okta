@@ -6,7 +6,7 @@ require (
 	github.com/ettle/strcase v0.1.1
 	github.com/okta/okta-sdk-golang/v2 v2.5.0
 	github.com/turbot/go-kit v0.4.0
-	github.com/turbot/steampipe-plugin-sdk/v4 v4.1.6
+	github.com/turbot/steampipe-plugin-sdk/v4 v4.1.7
 )
 
 require (
