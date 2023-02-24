@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
 //// TABLE DEFINITION
@@ -69,7 +69,7 @@ func listOktaUserTypes(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 		d.StreamListItem(ctx, userType)
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
@@ -86,7 +86,7 @@ func listOktaUserTypes(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 			d.StreamListItem(ctx, user)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
@@ -101,7 +101,7 @@ func getOktaUserType(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	logger := plugin.Logger(ctx)
 	logger.Trace("getOktaUserType")
 
-	userTypeId := d.KeyColumnQuals["id"].GetStringValue()
+	userTypeId := d.EqualsQuals["id"].GetStringValue()
 
 	if userTypeId == "" {
 		return nil, nil
