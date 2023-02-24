@@ -5,10 +5,10 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
 //// TABLE DEFINITION
@@ -87,12 +87,12 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 		Limit: 500,
 	}
 
-	if d.KeyColumnQualString("user_name") != "" {
-		input.Q = d.KeyColumnQualString("user_name")
-	} else if d.KeyColumnQualString("first_name") != "" {
-		input.Q = d.KeyColumnQualString("first_name")
-	} else if d.KeyColumnQualString("email") != "" {
-		input.Q = d.KeyColumnQualString("email")
+	if d.EqualsQualString("user_name") != "" {
+		input.Q = d.EqualsQualString("user_name")
+	} else if d.EqualsQualString("first_name") != "" {
+		input.Q = d.EqualsQualString("first_name")
+	} else if d.EqualsQualString("email") != "" {
+		input.Q = d.EqualsQualString("email")
 	}
 
 	// If the requested number of items is less than the paging max limit
@@ -115,7 +115,7 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 		d.StreamListItem(ctx, AppUserInfo{appId, *user})
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
@@ -132,7 +132,7 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 			d.StreamListItem(ctx, AppUserInfo{appId, *user})
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
@@ -146,8 +146,8 @@ func listApplicationAssignedUsers(ctx context.Context, d *plugin.QueryData, h *p
 func getApplicationAssignedUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("getApplicationAssignedUser")
-	appId := d.KeyColumnQuals["app_id"].GetStringValue()
-	userId := d.KeyColumnQuals["id"].GetStringValue()
+	appId := d.EqualsQuals["app_id"].GetStringValue()
+	userId := d.EqualsQuals["id"].GetStringValue()
 
 	if appId == "" || userId == "" {
 		return nil, nil

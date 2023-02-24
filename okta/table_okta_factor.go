@@ -7,10 +7,10 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/go-kit/types"
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
 //// TABLE DEFINITION
@@ -80,13 +80,13 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	}
 
 	// Minimize the API call with the given user id
-	if d.KeyColumnQuals["user_id"] != nil {
-		if d.KeyColumnQualString("user_id") != "" {
-			if d.KeyColumnQualString("user_id") != "" && d.KeyColumnQualString("user_id") != userId {
+	if d.EqualsQuals["user_id"] != nil {
+		if d.EqualsQualString("user_id") != "" {
+			if d.EqualsQualString("user_id") != "" && d.EqualsQualString("user_id") != userId {
 				return nil, nil
 			}
-		} else if len(getListValues(d.KeyColumnQuals["user_id"].GetListValue())) > 0 {
-			if !helpers.StringSliceContains(types.StringValueSlice(getListValues(d.KeyColumnQuals["user_id"].GetListValue())), userId) {
+		} else if len(getListValues(d.EqualsQuals["user_id"].GetListValue())) > 0 {
+			if !helpers.StringSliceContains(types.StringValueSlice(getListValues(d.EqualsQuals["user_id"].GetListValue())), userId) {
 				return nil, nil
 			}
 		}
@@ -113,7 +113,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		})
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
@@ -134,7 +134,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 			})
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
@@ -148,8 +148,8 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("getOktaFactor")
-	userId := d.KeyColumnQuals["user_id"].GetStringValue()
-	factorId := d.KeyColumnQuals["id"].GetStringValue()
+	userId := d.EqualsQuals["user_id"].GetStringValue()
+	factorId := d.EqualsQuals["id"].GetStringValue()
 
 	if userId == "" || factorId == "" {
 		return nil, nil

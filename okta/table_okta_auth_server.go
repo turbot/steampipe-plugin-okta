@@ -6,10 +6,10 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
 //// TABLE DEFINITION
@@ -69,8 +69,8 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 		Limit: 200,
 	}
 
-	if d.KeyColumnQualString("name") != "" {
-		input.Q = d.KeyColumnQualString("name")
+	if d.EqualsQualString("name") != "" {
+		input.Q = d.EqualsQualString("name")
 	}
 
 	// If the requested number of items is less than the paging max limit
@@ -95,7 +95,7 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 		d.StreamListItem(ctx, server)
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
@@ -112,7 +112,7 @@ func listOktaAuthServers(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 			d.StreamListItem(ctx, server)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
@@ -127,7 +127,7 @@ func getOktaAuthServer(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	logger := plugin.Logger(ctx)
 	logger.Trace("getOktaAuthServer")
 
-	authServerId := d.KeyColumnQuals["id"].GetStringValue()
+	authServerId := d.EqualsQuals["id"].GetStringValue()
 
 	if authServerId == "" {
 		return nil, nil
