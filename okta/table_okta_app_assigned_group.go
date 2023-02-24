@@ -8,10 +8,10 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/go-kit/types"
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
 //// TABLE DEFINITION
@@ -70,7 +70,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 		return nil, err
 	}
 
-	equalQuals := d.KeyColumnQuals
+	equalQuals := d.EqualsQuals
 	// Minimize the API call with the given application id
 	if equalQuals["app_id"] != nil {
 		if equalQuals["app_id"].GetStringValue() != "" {
@@ -110,7 +110,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 		d.StreamListItem(ctx, AppGroupInfo{appId, *group})
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.QueryStatus.RowsRemaining(ctx) == 0 {
+		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
@@ -127,7 +127,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 			d.StreamListItem(ctx, AppGroupInfo{appId, *group})
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
@@ -141,8 +141,8 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 func getApplicationAssignedGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("getApplicationAssignedGroup")
-	appId := d.KeyColumnQuals["app_id"].GetStringValue()
-	groupId := d.KeyColumnQuals["id"].GetStringValue()
+	appId := d.EqualsQuals["app_id"].GetStringValue()
+	groupId := d.EqualsQuals["id"].GetStringValue()
 
 	if appId == "" || groupId == "" {
 		return nil, nil
@@ -168,13 +168,13 @@ func getApplicationAssignedGroup(ctx context.Context, d *plugin.QueryData, h *pl
 func getOrListOktaApplications(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("getOrListOktaApplications")
-	appID := d.KeyColumnQuals["app_id"].GetStringValue()
+	appID := d.EqualsQuals["app_id"].GetStringValue()
 
 	// List application API doesn't support filtering by app ID, so call the get
 	// function to reduce API calls
 	if appID != "" {
 		// The okta_application table uses the "id" column instead
-		d.KeyColumnQuals["id"] = d.KeyColumnQuals["app_id"]
+		d.EqualsQuals["id"] = d.EqualsQuals["app_id"]
 		app, err := getOktaApplication(ctx, d, h)
 		if err != nil && !strings.Contains(err.Error(), "Not found") {
 			logger.Error("getOrListOktaApplications", "get_application_error", err)
