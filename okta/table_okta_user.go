@@ -42,11 +42,17 @@ func tableOktaUser() *plugin.Table {
 		HydrateConfig: []plugin.HydrateConfig{
 			{
 				Func:           listUserGroups,
-				MaxConcurrency: 10,
+				MaxConcurrency: 5,
+				RetryConfig: &plugin.RetryConfig{
+					ShouldRetryErrorFunc: shouldRetryError([]string{"429"}),
+				},
 			},
 			{
 				Func:           listAssignedRolesForUser,
-				MaxConcurrency: 10,
+				MaxConcurrency: 5,
+				RetryConfig: &plugin.RetryConfig{
+					ShouldRetryErrorFunc: shouldRetryError([]string{"429"}),
+				},
 			},
 		},
 		Columns: []*plugin.Column{

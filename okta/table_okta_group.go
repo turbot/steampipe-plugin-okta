@@ -38,7 +38,10 @@ func tableOktaGroup() *plugin.Table {
 		HydrateConfig: []plugin.HydrateConfig{
 			{
 				Func:           listGroupMembers,
-				MaxConcurrency: 10,
+				MaxConcurrency: 5,
+				RetryConfig: &plugin.RetryConfig{
+					ShouldRetryErrorFunc: shouldRetryError([]string{"429"}),
+				},
 			},
 		},
 		Columns: []*plugin.Column{
