@@ -135,6 +135,7 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 		input.Filter = strings.Join(filter, " and ")
 	}
 
+	plugin.Logger(ctx).Error("listOktaUsers - limit:", input.Limit)
 	users, resp, err := client.User.ListUsers(ctx, &input)
 	if err != nil {
 		logger.Error("listOktaUsers", "list_users_error", err)
@@ -143,7 +144,7 @@ func listOktaUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 
 	for _, user := range users {
 		d.StreamListItem(ctx, user)
-
+		plugin.Logger(ctx).Error("listOktaUsers - RowsRemaining:", d.RowsRemaining(ctx))
 		// Context can be cancelled due to manual cancellation or the limit has been hit
 		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
