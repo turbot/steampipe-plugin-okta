@@ -162,7 +162,7 @@ func listOktaSystemLogs(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 	// Default maximum limit set as per documentation
 	// https://developer.okta.com/docs/reference/api/system-log/#request-parameters
 	input := query.Params{
-		Limit: 3,
+		Limit: 1000,
 	}
 
 	// If the requested number of items is less than the paging max limit
