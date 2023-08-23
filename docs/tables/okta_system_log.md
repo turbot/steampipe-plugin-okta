@@ -10,7 +10,12 @@ Okta System Log captures a comprehensive set of system events related to users, 
   - log_event_time > ‘2023-03-15T00:00:00Z’ (The data will be fetched from the provided time to the current time)
   - log_event_time < ‘2023-03-15T00:00:00Z’ (The data will be fetched from one day before the provided time to the provided time)
 
-Note: This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/system-log/#bounded-requests).
+- This table supports optional quals. Queries with optional quals are optimised to use Okta [filters](https://developer.okta.com/docs/reference/api/system-log/#bounded-requests). Optional quals are supported for the following columns:
+  - filter
+  - log_actor_id
+  - log_ip_address
+  - log_event_type
+  - log_event_time
 
 ## Examples
 
@@ -32,16 +37,14 @@ from
 
 ```sql
 select
-  log_actor_id,
   log_actor_name,
   log_ip_address,
   display_message,
-  log_event_type,
   title
 from
   okta_system_log
 where
-  log_event_time >= now() - interval '30 days';
+  log_event_time >= now() - interval '3 days';
 ```
 
 ### Show logs of a particular actor
