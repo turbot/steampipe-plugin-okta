@@ -107,3 +107,19 @@ select
 from
   okta_system_log;
 ```
+
+### List events that match the filter pattern term **eventType**
+
+```sql
+select
+  log_actor_id,
+  log_actor_name,
+  log_ip_address,
+  display_message,
+  log_event_type,
+  severity
+from
+  okta_system_log
+where
+  filter = 'eventType eq "user.session.start"';
+```
