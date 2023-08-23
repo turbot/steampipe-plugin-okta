@@ -44,6 +44,18 @@ func tableOktaSystemLog() *plugin.Table {
 				Transform:   transform.FromField("Actor.DisplayName"),
 			},
 			{
+				Name:        "log_actor_email",
+				Type:        proto.ColumnType_STRING,
+				Description: "The email of the log actor.",
+				Transform:   transform.From(actorTurbotData),
+			},
+			{
+				Name:        "log_actor_username",
+				Type:        proto.ColumnType_STRING,
+				Description: "The username of the log actor.",
+				Transform:   transform.From(actorTurbotData),
+			},
+			{
 				Name:        "actor",
 				Type:        proto.ColumnType_JSON,
 				Description: "Represents who or what performed the action.",
@@ -258,4 +270,16 @@ func buildSystemLogQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap, filterK
 	}
 
 	return filters
+}
+
+//// TRANSFORM FUNCTIONS
+
+func actorTurbotData(_ context.Context, d *transform.TransformData) (interface{}, error) {
+	event := d.HydrateItem.(*okta.LogEvent)
+
+	if strings.Contains(event.Actor.AlternateId, "@") {
+		return event.Actor.AlternateId, nil
+	}
+
+	return nil, nil
 }
