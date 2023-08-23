@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -195,10 +196,11 @@ func listOktaSystemLogs(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 	if d.Quals["log_event_time"] != nil {
 		for _, q := range d.Quals["log_event_time"].Quals {
 			timestamp := q.Value.GetTimestampValue().AsTime().Format(filterTimeFormat)
+			timestampAdd := q.Value.GetTimestampValue().AsTime().Add(time.Second).Format(filterTimeFormat)
 			switch q.Operator {
 			case "=":
 				input.Since = timestamp
-				input.Until = timestamp
+				input.Until = timestampAdd
 			case ">=", ">":
 				input.Since = timestamp
 			case "<", "<=":
