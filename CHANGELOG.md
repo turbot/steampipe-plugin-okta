@@ -1,3 +1,9 @@
+## v0.10.1 [2023-10-04]
+
+_Dependencies_
+
+- Recompiled plugin with [steampipe-plugin-sdk v5.6.2](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v562-2023-10-03) which prevents nil pointer reference errors for implicit hydrate configs. ([#94](https://github.com/turbot/steampipe-plugin-okta/pull/94))
+
 ## v0.10.0 [2023-10-02]
 
 _Dependencies_
@@ -120,7 +126,7 @@ _Enhancements_
 _Bug fixes_
 
 - The `title` column for `okta_user` table will no longer have `nil` values ([#35](https://github.com/turbot/steampipe-plugin-okta/pull/35))
-  
+
 ## v0.0.2 [2021-08-25]
 
 _What's new?_
