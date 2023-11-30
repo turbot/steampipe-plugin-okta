@@ -1,10 +1,20 @@
-# Table: okta_app_assigned_group
+---
+title: "Steampipe Table: okta_app_assigned_group - Query Okta App Assigned Groups using SQL"
+description: "Allows users to query App Assigned Groups in Okta, specifically providing details about which groups are assigned to which applications."
+---
 
-Application integrations can be assigned to groups. When app integrations share the same group they are "linked". This can be helpful if you need to add provisioning functionality in an SSO-enabled app integration.
+# Table: okta_app_assigned_group - Query Okta App Assigned Groups using SQL
+
+Okta App Assigned Groups are a part of Okta's Universal Directory, which is a flexible, cloud-based user store. It allows you to manage users and their group memberships in your applications. This includes the ability to assign users to groups that are then assigned to applications.
+
+## Table Usage Guide
+
+The `okta_app_assigned_group` table provides insights into the App Assigned Groups within Okta's Universal Directory. As a system administrator, you can explore group-specific details through this table, including which users are part of which groups and which applications these groups have access to. This can be particularly useful for managing and auditing access controls within your applications.
 
 ## Examples
 
 ### Basic info
+Explore which applications are assigned to different groups in Okta, along with their last updated status and priority. This can be useful in managing application access and prioritizing updates.
 
 ```sql
 select
@@ -17,6 +27,7 @@ from
 ```
 
 ### List groups that are not assigned to any application
+Determine the groups that are not associated with any application to assess potential inefficiencies or unnecessary resources. This can aid in resource management and ensure optimal application performance.
 
 ```sql
 select
@@ -31,6 +42,7 @@ where
 ```
 
 ### List applications with assigned group details
+Identify applications and their associated group details to understand their status and configuration. This is useful for managing application access and ensuring appropriate group assignments.
 
 ```sql
 select

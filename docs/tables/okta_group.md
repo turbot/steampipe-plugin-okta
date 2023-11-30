@@ -1,12 +1,20 @@
-# Table: okta_group
+---
+title: "Steampipe Table: okta_group - Query Okta Groups using SQL"
+description: "Allows users to query Okta Groups, specifically the group profile details, providing insights into group memberships and access control."
+---
 
-A group is made up of users and are useful for representing roles, relationships, and can even be used for subscription tiers.
+# Table: okta_group - Query Okta Groups using SQL
 
-Note: This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/groups/#filters).
+Okta Groups are a collection of users defined in the Okta service. They provide a way to manage users and their access to applications and resources. Groups are central to the role-based access control (RBAC) model in Okta, and they can be used for assigning roles and permissions.
+
+## Table Usage Guide
+
+The `okta_group` table provides insights into groups within Okta. As an IT administrator, explore group-specific details through this table, including group profile, type, and associated users. Utilize it to manage access control, identify groups with specific roles, and verify the consistency of group memberships.
 
 ## Examples
 
 ### Basic info
+Explore the basic information about user groups in Okta to understand their purpose and configuration. This is useful for managing access controls and implementing security policies.
 
 ```sql
 select
@@ -20,6 +28,7 @@ from
 ```
 
 ### List groups without membership changes for more than 30 days
+Determine the groups that have not undergone membership alterations in over a month. This could be useful for identifying inactive or stagnant groups and assessing the need for membership reviews or updates.
 
 ```sql
 select
@@ -34,6 +43,7 @@ where
 ```
 
 ### List groups with profile or membership updates after a specific date using a filter
+Explore which groups have had updates to their profiles or memberships after a specific date. This is useful for keeping track of recent changes in group data and ensuring up-to-date information.
 
 ```sql
 select
@@ -49,6 +59,7 @@ where
 ```
 
 ### Get group member details for each group
+Determine the members associated with each group within your organization. This can help in understanding the group structure and managing user access effectively.
 
 ```sql
 select

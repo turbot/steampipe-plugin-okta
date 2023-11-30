@@ -1,14 +1,20 @@
-# Table: okta_trusted_origin
+---
+title: "Steampipe Table: okta_trusted_origin - Query Okta Trusted Origins using SQL"
+description: "Allows users to query Trusted Origins in Okta, providing insights into the trusted origins for the Okta domains."
+---
 
-A Trusted Origin is a security-based concept that combines the URI scheme, hostname, and port number of a page. All cross-origin web requests and redirects from Okta to your organization’s websites must be explicitly allowed.
+# Table: okta_trusted_origin - Query Okta Trusted Origins using SQL
 
-When external URLs are requested during sign-in, sign-out, or recovery operations, Okta checks those URLs against the allowed list of Trusted Origins. Trusted Origins also enable browser-based applications to access Okta APIs from JavaScript (CORS). If the origins aren't specified, the related operation (redirect or Okta API access) isn't permitted.
+Okta Trusted Origins is a service within Okta that allows you to manage the origins that are trusted to start browser-based authentication flows or permitted to make CORS requests. It provides a centralized way to manage these trusted origins for various Okta domains. Okta Trusted Origins helps you ensure the security of your Okta domains by controlling the origins that are allowed to interact with them.
 
-Note: This table does not support the optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/trusted-origins/#list-trusted-origins-with-a-filter).
+## Table Usage Guide
+
+The `okta_trusted_origin` table provides insights into trusted origins within Okta. As a security engineer, explore trusted origin-specific details through this table, including origin names, origin types, and associated metadata. Utilize it to uncover information about trusted origins, such as those with CORS or redirect permissions, and the verification of these permissions.
 
 ## Examples
 
 ### Basic info
+Explore which trusted origins in your Okta environment have been recently updated or created. This helps keep track of changes and maintain the security of your applications and APIs.
 
 ```sql
 select
@@ -24,6 +30,7 @@ from
 ```
 
 ### List trusted origins last updated 30 days ago
+Determine the trusted origins that have not been updated in the past 30 days. This is useful for maintaining security by ensuring all trusted origins are up-to-date.
 
 ```sql
 select
@@ -41,6 +48,7 @@ where
 ```
 
 ### List CORS scoped trusted origins
+Explore which trusted origins have been scoped for Cross-Origin Resource Sharing (CORS) to understand the security measures in place for data requests from different origins. This can help in assessing potential vulnerabilities and ensuring appropriate CORS policies are implemented.
 
 ```sql
 select
