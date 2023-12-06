@@ -11,6 +11,9 @@ Okta Applications are integral components of the Okta identity management servic
 
 The `okta_application` table provides insights into applications configured within an Okta organization. As a Security Analyst, explore application-specific details through this table, including application type, status, and associated metadata. Utilize it to uncover information about applications, such as those with specific accessibility, the users assigned to each application, and the verification of application settings.
 
+**Important Notes**
+- This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/apps/#filters).
+
 ## Examples
 
 ### Basic info

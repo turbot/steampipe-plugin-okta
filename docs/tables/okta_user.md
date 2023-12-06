@@ -1,15 +1,18 @@
 ---
-title: "Steampipe Table: okta_user - Query OCI Okta Users using SQL"
-description: "Allows users to query Okta Users in OCI, specifically user profiles and statuses, providing insights into user management and access control."
+title: "Steampipe Table: okta_user - Query Okta Users using SQL"
+description: "Allows users to query Okta Users in, specifically user profiles and statuses, providing insights into user management and access control."
 ---
 
-# Table: okta_user - Query OCI Okta Users using SQL
+# Table: okta_user - Query Okta Users using SQL
 
-Okta User is a resource within Oracle Cloud Infrastructure (OCI) that represents an authenticated entity in the Okta service. A user can be an end user (person) or a service user (software). Each user has a profile that stores the user’s data.
+Okta User is a resource within that represents an authenticated entity in the Okta service. A user can be an end user (person) or a service user (software). Each user has a profile that stores the user’s data.
 
 ## Table Usage Guide
 
-The `okta_user` table provides insights into user profiles within OCI Okta. As a security analyst, explore user-specific details through this table, including user status, last login, and assigned roles. Utilize it to uncover information about users, such as those with high-risk access levels, inactive users, and the verification of user profiles.
+The `okta_user` table provides insights into user profiles within Okta. As a security analyst, explore user-specific details through this table, including user status, last login, and assigned roles. Utilize it to uncover information about users, such as those with high-risk access levels, inactive users, and the verification of user profiles.
+
+**Important Notes**
+- This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/apps/#filters).
 
 ## Examples
 

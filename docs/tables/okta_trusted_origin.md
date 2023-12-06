@@ -11,6 +11,9 @@ Okta Trusted Origins is a service within Okta that allows you to manage the orig
 
 The `okta_trusted_origin` table provides insights into trusted origins within Okta. As a security engineer, explore trusted origin-specific details through this table, including origin names, origin types, and associated metadata. Utilize it to uncover information about trusted origins, such as those with CORS or redirect permissions, and the verification of these permissions.
 
+**Important Notes**
+- This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/apps/#filters).
+
 ## Examples
 
 ### Basic info

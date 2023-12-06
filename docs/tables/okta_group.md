@@ -11,6 +11,9 @@ Okta Groups are a collection of users defined in the Okta service. They provide 
 
 The `okta_group` table provides insights into groups within Okta. As an IT administrator, explore group-specific details through this table, including group profile, type, and associated users. Utilize it to manage access control, identify groups with specific roles, and verify the consistency of group memberships.
 
+**Important Notes**
+- This table supports an optional `filter` column to query results based on Okta supported [filters](https://developer.okta.com/docs/reference/api/groups/#filters).
+
 ## Examples
 
 ### Basic info
