@@ -19,7 +19,19 @@ The `okta_application` table provides insights into applications configured with
 ### Basic info
 Explore which applications are currently active in your system by identifying their status and creation dates. This can help in managing the applications effectively and ensuring timely updates.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  label,
+  created,
+  status,
+  sign_on_mode
+from
+  okta_application;
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -34,7 +46,21 @@ from
 ### List SAML 2.0 apps
 Identify applications that use SAML 2.0 as their sign-on mode. This can be useful in understanding the security protocols of your applications.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  label,
+  created,
+  status,
+  sign_on_mode
+from
+  okta_application
+where
+  sign_on_mode = 'SAML_2_0';
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -51,7 +77,20 @@ where
 ### List apps assigned to a specific user using a filter
 Explore which applications are assigned to a specific user by filtering based on user ID. This is useful for understanding the scope of access and permissions granted to individual users within your system.
 
-```sql
+```sql+postgres
+select
+  id,
+  label,
+  name,
+  sign_on_mode,
+  status
+from
+  okta_application as app
+where
+  filter = 'user.id eq "00u1e5eizrjQKTWMA5d7"';
+```
+
+```sql+sqlite
 select
   id,
   label,
@@ -67,7 +106,20 @@ where
 ### List apps assigned to a specific group using a filter
 Explore which applications are assigned to a specific group, useful for understanding application accessibility and managing group permissions. This can aid in maintaining security protocols and ensuring appropriate access rights.
 
-```sql
+```sql+postgres
+select
+  id,
+  label,
+  name,
+  sign_on_mode,
+  status
+from
+  okta_application
+where
+  filter = 'group.id eq "00u1e5eizrjQKTWMA5d7"';
+```
+
+```sql+sqlite
 select
   id,
   label,

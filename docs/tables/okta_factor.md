@@ -16,7 +16,18 @@ The `okta_factor` table provides insights into the authentication methods used w
 ### Basic info
 Explore which security factors have been created for each user and their current status. This can be useful to understand the security measures in place for each user and if they are active or not.
 
-```sql
+```sql+postgres
+select
+  id,
+  user_id,
+  factor_type,
+  created,
+  status
+from
+  okta_factor;
+```
+
+```sql+sqlite
 select
   id,
   user_id,
@@ -30,7 +41,20 @@ from
 ### List factors pending activation
 Explore which security factors are awaiting activation, enabling you to take necessary actions to ensure user accounts are secure and fully functional. This helps in maintaining the security standards and smooth operation of your system.
 
-```sql
+```sql+postgres
+select
+  id,
+  user_id,
+  factor_type,
+  created,
+  status
+from
+  okta_factor
+where
+  status = 'PENDING_ACTIVATION';
+```
+
+```sql+sqlite
 select
   id,
   user_id,
@@ -46,7 +70,21 @@ where
 ### List factors provided by Okta
 Explore which factors are provided by Okta to gain insights into the status and creation dates of these factors. This can be useful in managing user security settings and assessing the elements within your Okta environment.
 
-```sql
+```sql+postgres
+select
+  id,
+  user_id,
+  factor_type,
+  created,
+  provider,
+  status
+from
+  okta_factor
+where
+  provider = 'OKTA';
+```
+
+```sql+sqlite
 select
   id,
   user_id,
@@ -63,7 +101,20 @@ where
 ### Get factor by factor ID and user ID
 Determine the security factor settings associated with a specific user, which can be useful in understanding the user's security setup and status. This can be particularly helpful in troubleshooting or auditing security compliance.
 
-```sql
+```sql+postgres
+select
+  id,
+  user_id,
+  factor_type,
+  created,
+  status
+from
+  okta_factor
+where
+  id = 'ost1l5cklwIRvLzUY5d7' and user_id = '00u1kcigdvWtR96HY5d7';
+```
+
+```sql+sqlite
 select
   id,
   user_id,

@@ -19,7 +19,20 @@ The `okta_trusted_origin` table provides insights into trusted origins within Ok
 ### Basic info
 Explore which trusted origins in your Okta environment have been recently updated or created. This helps keep track of changes and maintain the security of your applications and APIs.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  last_updated,
+  origin,
+  scopes,
+  status
+from
+  okta_trusted_origin;
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -35,7 +48,7 @@ from
 ### List trusted origins last updated 30 days ago
 Determine the trusted origins that have not been updated in the past 30 days. This is useful for maintaining security by ensuring all trusted origins are up-to-date.
 
-```sql
+```sql+postgres
 select
   name,
   id,
@@ -50,10 +63,25 @@ where
   last_updated < current_timestamp - interval '30 days';
 ```
 
+```sql+sqlite
+select
+  name,
+  id,
+  created,
+  last_updated,
+  origin,
+  scopes,
+  status
+from
+  okta_trusted_origin
+where
+  last_updated < datetime('now', '-30 day');
+```
+
 ### List CORS scoped trusted origins
 Explore which trusted origins have been scoped for Cross-Origin Resource Sharing (CORS) to understand the security measures in place for data requests from different origins. This can help in assessing potential vulnerabilities and ensuring appropriate CORS policies are implemented.
 
-```sql
+```sql+postgres
 select
   name,
   id,
@@ -66,4 +94,19 @@ from
   okta_trusted_origin
 where
   scopes @> '[{"type":"CORS"}]'::jsonb;
+```
+
+```sql+sqlite
+select
+  name,
+  id,
+  created,
+  last_updated,
+  origin,
+  scopes,
+  status
+from
+  okta_trusted_origin
+where
+  json_extract(scopes, '$[0].type') = 'CORS';
 ```

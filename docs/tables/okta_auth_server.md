@@ -16,7 +16,19 @@ The `okta_auth_server` table provides insights into the configuration and polici
 ### Basic info
 Explore the status and update history of your authentication servers. This can be useful to track changes over time and ensure all servers are functioning as expected.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  audiences,
+  created,
+  last_updated,
+  status
+from
+  okta_auth_server;
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -31,7 +43,7 @@ from
 ### List authorization servers where manual rotation signing keys are not rotated in more than 90 days
 Determine the areas in which authorization servers have not had their manual rotation signing keys rotated in more than 90 days. This is useful for maintaining security standards and ensuring regular key rotation.
 
-```sql
+```sql+postgres
 select
   name,
   id,
@@ -47,10 +59,40 @@ where
   and CAST(credentials -> 'signing' ->> 'lastRotated' as date) < current_timestamp - interval '90 days';
 ```
 
+```sql+sqlite
+select
+  name,
+  id,
+  audiences,
+  created,
+  last_updated, 
+  json_extract(credentials, '$.signing.lastRotated') as last_rotated,
+  status
+from
+  okta_auth_server
+where
+  json_extract(credentials, '$.signing.rotationMode') = 'MANUAL' 
+  and date(json_extract(credentials, '$.signing.lastRotated')) < date('now','-90 days');
+```
+
 ### List inactive authorization servers
 Analyze the settings to understand which authorization servers are currently inactive. This is useful for maintaining server efficiency and ensuring all resources are optimally utilized.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  audiences,
+  created,
+  last_updated,
+  status
+from
+  okta_auth_server
+where
+  status = 'INACTIVE';
+```
+
+```sql+sqlite
 select
   name,
   id,

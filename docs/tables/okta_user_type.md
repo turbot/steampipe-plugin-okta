@@ -18,7 +18,19 @@ Explore the different types of users within your Okta environment. This can help
 **Note:** _default_ is a reserved word and has to be double-quoted when used as identifier.
 
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  "default",
+  description,
+  created,
+  created_by
+from
+  okta_user_type;
+```
+
+```sql+sqlite
 select
   name,
   id,

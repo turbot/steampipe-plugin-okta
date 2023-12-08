@@ -16,7 +16,18 @@ The `okta_app_assigned_user` table provides insights into the users assigned to 
 ### Basic info
 Explore which users are assigned to specific applications in your Okta environment, with details including their ID, username, the time they were created, and their current status. This can help you manage user access and ensure appropriate permissions are maintained.
 
-```sql
+```sql+postgres
+select
+  id as user_id,
+  app_id,
+  user_name,
+  created,
+  status
+from
+  okta_app_assigned_user;
+```
+
+```sql+sqlite
 select
   id as user_id,
   app_id,
@@ -30,7 +41,7 @@ from
 ### List users that are not assigned to any application
 Explore which users are not linked to any application, useful for identifying potential unused or inactive accounts. This can aid in optimizing resource allocation and enhancing security measures.
 
-```sql
+```sql+postgres
 select
   usr.id as id,
   usr.login as login,
@@ -43,10 +54,34 @@ where
   usr.id is null or au.id is null;
 ```
 
+```sql+sqlite
+select
+  usr.id as id,
+  usr.login as login,
+  usr.created as created,
+  usr.status as status
+from
+  okta_user usr
+left join okta_app_assigned_user au on usr.id = au.id
+where
+  usr.id is null or au.id is null
+union all
+select
+  usr.id as id,
+  usr.login as login,
+  usr.created as created,
+  usr.status as status
+from
+  okta_user usr
+right join okta_app_assigned_user au on usr.id = au.id
+where
+  usr.id is null or au.id is null;
+```
+
 ### List applications with assigned user details
 This query helps you identify all applications that have users assigned to them, along with the users' details. It's useful for monitoring application usage and managing user access, ensuring security and efficiency in your system.
 
-```sql
+```sql+postgres
 select
   app.name as app_name,
   app.id as app_id,
@@ -61,4 +96,21 @@ from
   okta_application app
 inner join okta_app_assigned_user au on app.id = au.app_id
 inner join okta_user usr on au.id = usr.id;
+```
+
+```sql+sqlite
+select
+  app.name as app_name,
+  app.id as app_id,
+  app.label as app_label,
+  app.created as app_created,
+  app.status as app_status,
+  au.id as user_id,
+  usr.login as user_login,
+  usr.created as user_created,
+  usr.status as user_status
+from
+  okta_application app
+join okta_app_assigned_user au on app.id = au.app_id
+join okta_user usr on au.id = usr.id;
 ```
