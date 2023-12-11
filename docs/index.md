@@ -8,6 +8,7 @@ name: "okta"
 description: "Steampipe plugin for querying resource users, groups, applications and more from Okta."
 og_description: "Query Okta with SQL! Open source CLI. No DB required."
 og_image: "/images/plugins/turbot/okta-social-graphic.png"
+engines: ["steampipe", "sqlite", "postgres", "export"]
 ---
 
 # Okta + Steampipe
