@@ -1,12 +1,36 @@
-# Table: okta_network_zone
+---
+title: "Steampipe Table: okta_network_zone - Query Okta Network Zones using SQL"
+description: "Allows users to query Network Zones in Okta, specifically providing detailed information about each network zone's type, status, system, and conditions."
+---
 
-The Okta Zones provides operations to manage Zones in your organization. There are two usage Zone types: Policy Network Zones and Block List Network Zones. Policy Network Zones are used to guide policy decisions. Block List Network Zones are used to deny access from certain IP addresses, locations, proxy types, or Autonomous System Numbers (ASNs) before policy evaluation.
+# Table: okta_network_zone - Query Okta Network Zones using SQL
+
+A Network Zone in Okta represents a set of IP address ranges. It can be used to control the security behavior of end users and applications based on their IP location. Network Zones help in defining trusted IP ranges, blocking suspicious IP ranges, and setting up behavior detection for each zone.
+
+## Table Usage Guide
+
+The `okta_network_zone` table provides insights into Network Zones within Okta. As a security administrator, explore zone-specific details through this table, including zone type, status, system, and conditions. Utilize it to manage access control based on IP location, identify trusted IP ranges, and set up behavior detection for each zone.
 
 ## Examples
 
 ### Basic info
+Gain insights into the creation, status, and usage of various network zones in your Okta system. This information can be helpful in understanding the overall network configuration and assessing any potential security risks.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  status,
+  system,
+  locations,
+  proxy_type,
+  usage
+from
+  okta_network_zone;
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -21,8 +45,23 @@ from
 ```
 
 ### List TorAnonymizer proxy type network zone
+Explore which network zones are set up as TorAnonymizer proxies. This can be particularly useful for identifying potential security risks or for auditing your network's configuration.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  status,
+  system,
+  proxy_type
+from
+  okta_network_zone
+where
+  proxy_type = 'TorAnonymizer';
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -37,8 +76,9 @@ where
 ```
 
 ### List network zones location and region details
+Analyze your network zones to understand their geographical distribution. This is useful when you need to pinpoint specific locations for network management or security purposes.
 
-```sql
+```sql+postgres
 select
   name,
   id,
@@ -49,9 +89,34 @@ from
   jsonb_array_elements(locations) as l;
 ```
 
-### List system network zones
+```sql+sqlite
+select
+  name,
+  id,
+  json_extract(l.value, '$.country') as country,
+  json_extract(l.value, '$.region') as region
+from
+  okta_network_zone,
+  json_each(locations) as l;
+```
 
-```sql
+### List system network zones
+Explore which network zones are system-generated in your Okta environment. This can help you understand and manage the security of your system.
+
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  status,
+  system
+from
+  okta_network_zone
+where
+  system;
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -65,8 +130,23 @@ where
 ```
 
 ### List active network zones
+Explore the active network zones in your system, allowing you to understand the current operational areas for better management and security planning.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  status,
+  system,
+  proxy_type
+from
+  okta_network_zone
+where
+  status = 'ACTIVE';
+```
+
+```sql+sqlite
 select
   name,
   id,

@@ -1,12 +1,36 @@
-# Table: okta_password_policy
+---
+title: "Steampipe Table: okta_password_policy - Query Okta Password Policies using SQL"
+description: "Allows users to query Okta Password Policies, providing insights into the password policy configurations and rules within an Okta organization."
+---
 
-The [Password Policy](https://developer.okta.com/docs/reference/api/policy/#password-policy) determines the requirements for a user's password length and complexity, as well as the frequency with which a password must be changed. This Policy also governs the recovery operations that may be performed by the User, including change password, reset (forgot) password, and self-service password unlock.
+# Table: okta_password_policy - Query Okta Password Policies using SQL
+
+Okta Password Policy is a set of rules and settings within Okta that governs the complexity requirements for user passwords and the actions to take when users violate these rules. It helps organizations to enforce strong password practices, enhancing security by reducing the risk of password-based attacks. Okta Password Policy provides a way to customize these rules and settings to meet the specific security needs of an organization.
+
+## Table Usage Guide
+
+The `okta_password_policy` table provides insights into the password policies within Okta. As a security analyst, explore policy-specific details through this table, including the complexity requirements, lockout settings, and associated metadata. Utilize it to uncover information about the password policies, such as those with weak complexity requirements, the number of failed attempts before a lockout, and the duration of the lockout period.
 
 ## Examples
 
 ### Basic info
+Explore which password policies have been implemented, understanding their creation dates, status, and priority. This can be useful for assessing the security measures in place and their relative importance.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  status,
+  priority,
+  system
+from
+  okta_password_policy
+order by
+  priority;
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -21,8 +45,23 @@ order by
 ```
 
 ### List system password policies
+Analyze the settings to understand the system's password policies, enabling you to assess their creation, status, and priority. This is beneficial for maintaining security standards and prioritizing system updates.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  status,
+  priority,
+  system
+from
+  okta_password_policy
+where
+  system;
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -37,8 +76,23 @@ where
 ```
 
 ### List inactive password policies
+Explore which password policies have been marked as inactive, allowing you to identify and review any outdated or unused policies that could potentially impact system security. This is particularly useful in maintaining security standards and ensuring all policies are up-to-date.
 
-```sql
+```sql+postgres
+select
+  name,
+  id,
+  created,
+  status,
+  priority,
+  system
+from
+  okta_password_policy
+where
+  status = 'INACTIVE';
+```
+
+```sql+sqlite
 select
   name,
   id,
@@ -53,8 +107,9 @@ where
 ```
 
 ### Get policy details for each password policy
+Explore the specifics of each password policy, including its age, complexity, lockout details, recovery factors, and delegation options. This can help you understand and manage the security standards across different policies.
 
-```sql
+```sql+postgres
 select
   name,
   id,
@@ -68,9 +123,24 @@ from
   okta_password_policy;
 ```
 
-### Get rules details for each password policy
+```sql+sqlite
+select
+  name,
+  id,
+  status,
+  settings as password_age,
+  settings as password_complexity,
+  settings as password_lockout,
+  settings as recovery_factors,
+  settings as delegation_options
+from
+  okta_password_policy;
+```
 
-```sql
+### Get rules details for each password policy
+Explore the specific rules associated with each password policy to gain insights into their statuses, priorities, and conditions. This can help in understanding and managing security measures more effectively.
+
+```sql+postgres
 select
   name,
   id,
@@ -83,4 +153,19 @@ select
 from
   okta_password_policy,
   jsonb_array_elements(rules) as r;
+```
+
+```sql+sqlite
+select
+  name,
+  id,
+  json_extract(r.value, '$.name') as rule_name,
+  json_extract(r.value, '$.system') as rule_system,
+  json_extract(r.value, '$.status') as rule_status,
+  json_extract(r.value, '$.priority') as rule_priority,
+  r.value as rule_actions,
+  r.value as rule_conditions
+from
+  okta_password_policy,
+  json_each(rules) as r;
 ```

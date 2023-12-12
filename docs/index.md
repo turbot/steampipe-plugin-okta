@@ -8,13 +8,14 @@ name: "okta"
 description: "Steampipe plugin for querying resource users, groups, applications and more from Okta."
 og_description: "Query Okta with SQL! Open source CLI. No DB required."
 og_image: "/images/plugins/turbot/okta-social-graphic.png"
+engines: ["steampipe", "sqlite", "postgres", "export"]
 ---
 
 # Okta + Steampipe
 
 [Okta](https://www.okta.com/) is the leading independent identity provider. The Okta Identity enables organizations to securely connect the right people to the right technologies at the right time.
 
-[Steampipe](https://steampipe.io) is an open source CLI to instantly query cloud APIs using SQL.
+[Steampipe](https://steampipe.io) is an open-source zero-ETL engine to instantly query cloud APIs using SQL.
 
 For example:
 
@@ -92,11 +93,6 @@ If using the Okta service application, the following scopes must be enabled for 
 - okta.factors.read
 
 **Note:** Table `okta_user_type` and `okta_network_zone` doesn't work in Service App authentication mode. 
-
-## Get involved
-
-- Open source: https://github.com/turbot/steampipe-plugin-okta
-- Community: [Join #steampipe on Slack →](https://turbot.com/community/join)
 
 ## Configuring Okta Credentials
 
