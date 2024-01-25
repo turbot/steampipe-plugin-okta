@@ -27,7 +27,7 @@ func tableOktaDevice() *plugin.Table {
 		},
 		HydrateConfig: []plugin.HydrateConfig{
 			{
-				Func:           listGroupMembers,
+				Func:           listOktaDevices,
 				MaxConcurrency: 10,
 			},
 		},
@@ -96,14 +96,14 @@ func listOktaDevices(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrate
 
 	// paging
 	for resp.HasNextPage() {
-		var nextGroupSet []okta.DeviceList
-		resp, err = resp.Next(&nextGroupSet)
+		var nextDeviceSet []okta.DeviceList
+		resp, err = resp.Next(&nextDeviceSet)
 		if err != nil {
 			logger.Error("okta_device.listOktaDevices", "paging_error", err)
 			return nil, err
 		}
-		for _, group := range nextGroupSet {
-			d.StreamListItem(ctx, group)
+		for _, device := range nextDeviceSet {
+			d.StreamListItem(ctx, device)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
 			if d.RowsRemaining(ctx) == 0 {
