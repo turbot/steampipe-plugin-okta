@@ -33,7 +33,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 			maxBackoffIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF"), 10, 64)
 			if err != nil {
 				// handle the error in case of invalid string
-				return nil, fmt.Errorf("Error converting max backoff string type to int64:", err)
+				return nil, fmt.Errorf("error in converting max backoff string type to int64: %v", err)
 			}
 			maxBackoff = maxBackoffIntValue
 		}
@@ -46,7 +46,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 			requestTimeoutIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_REQUEST_TIMEOUT"), 10, 64)
 			if err != nil {
 				// handle the error in case of invalid string
-				return nil, fmt.Errorf("Error converting request timeout string type to int64:", err)
+				return nil, fmt.Errorf("error in converting request timeout string type to int64: %v", err)
 			}
 			requestTimeout = requestTimeoutIntValue
 		}
@@ -59,7 +59,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 			maxRetriesIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES"), 10, 32)
 			if err != nil {
 				// handle the error in case of invalid string
-				return nil, fmt.Errorf("Error converting max retries string type to int32:", err)
+				return nil, fmt.Errorf("error in converting max retries string type to int32: %v", err)
 			}
 			maxRetries = int32(maxRetriesIntValue)
 		}
