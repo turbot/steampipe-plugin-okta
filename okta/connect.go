@@ -29,34 +29,40 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 	if oktaConfig.MaxBackoff != nil {
 		maxBackoff = *oktaConfig.MaxBackoff
 	} else {
-		maxBackoffIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF"), 10, 64)
-		if err != nil {
-			// handle the error in case of invalid string
-			return nil, fmt.Errorf("Error converting max backoff string type to int64:", err)
+		if os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF") != "" {
+			maxBackoffIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF"), 10, 64)
+			if err != nil {
+				// handle the error in case of invalid string
+				return nil, fmt.Errorf("Error converting max backoff string type to int64:", err)
+			}
+			maxBackoff = maxBackoffIntValue
 		}
-		maxBackoff = maxBackoffIntValue
 	}
 
 	if oktaConfig.RequestTimeout != nil {
 		requestTimeout = *oktaConfig.RequestTimeout
 	} else {
-		requestTimeoutIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_REQUEST_TIMEOUT"), 10, 64)
-		if err != nil {
-			// handle the error in case of invalid string
-			return nil, fmt.Errorf("Error converting request timeout string type to int64:", err)
+		if os.Getenv("OKTA_CLIENT_REQUEST_TIMEOUT") != "" {
+			requestTimeoutIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_REQUEST_TIMEOUT"), 10, 64)
+			if err != nil {
+				// handle the error in case of invalid string
+				return nil, fmt.Errorf("Error converting request timeout string type to int64:", err)
+			}
+			requestTimeout = requestTimeoutIntValue
 		}
-		requestTimeout = requestTimeoutIntValue
 	}
 
 	if oktaConfig.MaxRetries != nil {
 		maxRetries = *oktaConfig.MaxRetries
 	} else {
-		maxRetriesIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES"), 10, 32)
-		if err != nil {
-			// handle the error in case of invalid string
-			return nil, fmt.Errorf("Error converting max retries string type to int32:", err)
+		if os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES") != "" {
+			maxRetriesIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES"), 10, 32)
+			if err != nil {
+				// handle the error in case of invalid string
+				return nil, fmt.Errorf("Error converting max retries string type to int32:", err)
+			}
+			maxRetries = int32(maxRetriesIntValue)
 		}
-		maxRetries = int32(maxRetriesIntValue)
 	}
 
 	scopes := []string{"okta.users.read", "okta.groups.read", "okta.roles.read", "okta.apps.read", "okta.policies.read", "okta.authorizationServers.read", "okta.trustedOrigins.read", "okta.factors.read"}
