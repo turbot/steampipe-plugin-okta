@@ -77,6 +77,19 @@ connection "okta" {
   # domain      = "https://<your_okta_domain>.okta.com"
   # client_id   = "0oa10zpa2bo6tAm9Test"
   # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
+
+  # The maximum number of attempts (including the initial call) Steampipe will
+  # make for failing API calls. Can also be set with the OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES environment variable.
+  # Defaults to 5 and must be greater than or equal to 1.
+  # max_retries = 5
+
+  # The maximum amount of time to wait on request back off. Can also be set with the OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF environment variable.
+  # Defaults to 30 and must be greater than or equal to 1.
+  # max_backoff = 30
+
+  # HTTP request time out in seconds. Can also be set with the OKTA_CLIENT_REQUEST_TIMEOUT environment variable.
+  # Defaults to 30 and must be greater than or equal to 1.
+  # request_timeout = 30
 }
 ```
 
@@ -92,7 +105,7 @@ If using the Okta service application, the following scopes must be enabled for 
 - okta.trustedOrigins.read
 - okta.factors.read
 
-**Note:** Table `okta_user_type` and `okta_network_zone` doesn't work in Service App authentication mode. 
+**Note:** Table `okta_user_type` and `okta_network_zone` doesn't work in Service App authentication mode.
 
 ## Configuring Okta Credentials
 
@@ -105,6 +118,15 @@ The Okta plugin will use the standard Okta environment variables to obtain crede
 ```sh
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
 export OKTA_CLIENT_TOKEN=02d0YZgNSJwlNew6lZG-6qGThisisatest-token
+```
+
+#### API Token with maximum number retries attempts
+
+```sh
+export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
+export OKTA_CLIENT_TOKEN=02d0YZgNSJwlNew6lZG-6qGThisisatest-token
+export OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES=10
+export OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF=40
 ```
 
 #### Service App
