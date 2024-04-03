@@ -120,7 +120,7 @@ func listOktaDevices(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrate
 func getOktaDevice(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 
-	deviceId := d.EqualsQuals["id"].GetStringValue()
+	deviceId := d.EqualsQualString("id")
 
 	if deviceId == "" {
 		return nil, nil
