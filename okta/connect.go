@@ -142,6 +142,51 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 
 	var domain, token, clientID, privateKey string
 	scopes := []string{"okta.users.read", "okta.groups.read", "okta.roles.read", "okta.apps.read", "okta.policies.read", "okta.authorizationServers.read", "okta.trustedOrigins.read", "okta.factors.read", "okta.devices.read"}
+
+	// The default value has been set as per the API doc: https://github.com/okta/okta-sdk-golang?tab=readme-ov-file#environment-variables
+	// SDK supported environment variables: https://github.com/okta/okta-sdk-golang/blob/master/okta/config.go#L33-L70
+	var requestTimeout, maxBackoff int64 = 30, 30
+	var maxRetries int32 = 5
+
+	if oktaConfig.MaxBackoff != nil {
+		maxBackoff = *oktaConfig.MaxBackoff
+	} else {
+		if os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF") != "" {
+			maxBackoffIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF"), 10, 64)
+			if err != nil {
+				// handle the error in case of invalid string
+				return nil, fmt.Errorf("error in converting max backoff string type to int64: %v", err)
+			}
+			maxBackoff = maxBackoffIntValue
+		}
+	}
+
+	if oktaConfig.RequestTimeout != nil {
+		requestTimeout = *oktaConfig.RequestTimeout
+	} else {
+		if os.Getenv("OKTA_CLIENT_REQUEST_TIMEOUT") != "" {
+			requestTimeoutIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_REQUEST_TIMEOUT"), 10, 64)
+			if err != nil {
+				// handle the error in case of invalid string
+				return nil, fmt.Errorf("error in converting request timeout string type to int64: %v", err)
+			}
+			requestTimeout = requestTimeoutIntValue
+		}
+	}
+
+	if oktaConfig.MaxRetries != nil {
+		maxRetries = *oktaConfig.MaxRetries
+	} else {
+		if os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES") != "" {
+			maxRetriesIntValue, err := strconv.ParseInt(os.Getenv("OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES"), 10, 32)
+			if err != nil {
+				// handle the error in case of invalid string
+				return nil, fmt.Errorf("error in converting max retries string type to int32: %v", err)
+			}
+			maxRetries = int32(maxRetriesIntValue)
+		}
+	}
+
 	if oktaConfig.Domain != nil {
 		domain = *oktaConfig.Domain
 	} else {
@@ -155,7 +200,7 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 	}
 
 	if domain != "" && token != "" {
-		oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithOrgUrl(domain), oktaV4.WithToken(token), oktaV4.WithRequestTimeout(30), oktaV4.WithRateLimitMaxRetries(5))
+		oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithOrgUrl(domain), oktaV4.WithToken(token), oktaV4.WithRequestTimeout(requestTimeout), oktaV4.WithRateLimitMaxRetries(maxRetries), oktaV4.WithRateLimitMaxBackOff(maxBackoff))
 		if err != nil {
 			return nil, err
 		}
@@ -178,7 +223,7 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 	}
 
 	if domain != "" && clientID != "" && privateKey != "" {
-		oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithOrgUrl(domain), oktaV4.WithAuthorizationMode("PrivateKey"), oktaV4.WithClientId(clientID), oktaV4.WithPrivateKey(privateKey), oktaV4.WithScopes(scopes), oktaV4.WithRequestTimeout(15), oktaV4.WithRateLimitMaxRetries(5))
+		oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithOrgUrl(domain), oktaV4.WithAuthorizationMode("PrivateKey"), oktaV4.WithClientId(clientID), oktaV4.WithPrivateKey(privateKey), oktaV4.WithScopes(scopes), oktaV4.WithRequestTimeout(requestTimeout), oktaV4.WithRateLimitMaxRetries(maxRetries), oktaV4.WithRateLimitMaxBackOff(maxBackoff))
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +243,7 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 	* 3. Environment variables
 	* 4. Configuration explicitly passed to the constructor (see the example in Getting started)
 	*	*/
-	oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithRequestTimeout(30), oktaV4.WithRateLimitMaxRetries(5))
+	oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithRequestTimeout(requestTimeout), oktaV4.WithRateLimitMaxRetries(maxRetries), oktaV4.WithRateLimitMaxBackOff(maxBackoff))
 	if err != nil {
 			return nil, err
 		}
