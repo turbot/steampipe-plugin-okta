@@ -76,7 +76,7 @@ func listOktaDevices(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrate
 		}
 	}
 
-	deviceReq := client.DeviceAPI.ListDevices(ctx)
+	deviceReq := client.DeviceAPI.ListDevices(ctx).Expand("userSummary")
 	deviceReq = deviceReq.Limit(int32(maxLimit))
 
 	devices, resp, err := deviceReq.Execute()
