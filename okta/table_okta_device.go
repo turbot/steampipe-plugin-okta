@@ -3,7 +3,7 @@ package okta
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v3/okta"
+	"github.com/okta/okta-sdk-golang/v4/okta"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
@@ -44,9 +44,9 @@ func tableOktaDevice() *plugin.Table {
 			// JSON Columns
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "The Device's Profile properties."},
 			{Name: "resource_display_name", Type: proto.ColumnType_JSON, Description: "Display name of the device."},
-			{Name: "links", Type: proto.ColumnType_JSON, Hydrate: listGroupMembers, Description: "Specifies link relations (see Web Linking) available for the current status of an application using the JSON Hypertext Application Language specification."},
-			{Name: "embedded", Type: proto.ColumnType_JSON, Hydrate: listGroupMembers, Description: "List of associated users for the device if the expand=user query parameter is specified in the request. Use expand=userSummary to get only a summary of each associated user for the device."},
-			{Name: "additional_properties", Type: proto.ColumnType_JSON, Hydrate: listGroupMembers, Description: "additional properties of the device."},
+			{Name: "links", Type: proto.ColumnType_JSON, Description: "Specifies link relations (see Web Linking) available for the current status of an application using the JSON Hypertext Application Language specification."},
+			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "List of associated users for the device if the expand=user query parameter is specified in the request. Use expand=userSummary to get only a summary of each associated user for the device."},
+			{Name: "additional_properties", Type: proto.ColumnType_JSON, Description: "additional properties of the device."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.DisplayName"), Description: titleDescription},
@@ -58,7 +58,7 @@ func tableOktaDevice() *plugin.Table {
 
 func listOktaDevices(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	client, err := ConnectV3(ctx, d)
+	client, err := ConnectV4(ctx, d)
 	if err != nil {
 		logger.Error("okta_device.listOktaDevices", "connect_error", err)
 		return nil, err
@@ -131,7 +131,7 @@ func getOktaDevice(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return nil, nil
 	}
 
-	client, err := ConnectV3(ctx, d)
+	client, err := ConnectV4(ctx, d)
 	if err != nil {
 		logger.Error("okta_device.getOktaDevice", "connect_error", err)
 		return nil, err

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	oktaV3 "github.com/okta/okta-sdk-golang/v3/okta"
+	oktaV4 "github.com/okta/okta-sdk-golang/v4/okta"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
@@ -83,11 +83,11 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 }
 
 
-func ConnectV3(ctx context.Context, d *plugin.QueryData) (*oktaV3.APIClient, error) {
+func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, error) {
 	// have we already created and cached the session?
-	sessionCacheKey := "OktaSessionV3"
+	sessionCacheKey := "OktaSessionV4"
 	if cachedData, ok := d.ConnectionManager.Cache.Get(sessionCacheKey); ok {
-		return cachedData.(*oktaV3.APIClient), nil
+		return cachedData.(*oktaV4.APIClient), nil
 	}
 
 	oktaConfig := GetConfig(d.Connection)
@@ -107,11 +107,11 @@ func ConnectV3(ctx context.Context, d *plugin.QueryData) (*oktaV3.APIClient, err
 	}
 
 	if domain != "" && token != "" {
-		oktaConfiguratiopn, err := oktaV3.NewConfiguration(oktaV3.WithOrgUrl(domain), oktaV3.WithToken(token), oktaV3.WithRequestTimeout(30), oktaV3.WithRateLimitMaxRetries(5))
+		oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithOrgUrl(domain), oktaV4.WithToken(token), oktaV4.WithRequestTimeout(30), oktaV4.WithRateLimitMaxRetries(5))
 		if err != nil {
 			return nil, err
 		}
-		client := oktaV3.NewAPIClient(oktaConfiguratiopn)
+		client := oktaV4.NewAPIClient(oktaConfiguratiopn)
 
 		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
 		return client, err
@@ -130,12 +130,12 @@ func ConnectV3(ctx context.Context, d *plugin.QueryData) (*oktaV3.APIClient, err
 	}
 
 	if domain != "" && clientID != "" && privateKey != "" {
-		oktaConfiguratiopn, err := oktaV3.NewConfiguration(oktaV3.WithOrgUrl(domain), oktaV3.WithAuthorizationMode("PrivateKey"), oktaV3.WithClientId(clientID), oktaV3.WithPrivateKey(privateKey), oktaV3.WithScopes(scopes), oktaV3.WithRequestTimeout(15), oktaV3.WithRateLimitMaxRetries(5))
+		oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithOrgUrl(domain), oktaV4.WithAuthorizationMode("PrivateKey"), oktaV4.WithClientId(clientID), oktaV4.WithPrivateKey(privateKey), oktaV4.WithScopes(scopes), oktaV4.WithRequestTimeout(15), oktaV4.WithRateLimitMaxRetries(5))
 		if err != nil {
 			return nil, err
 		}
 
-		client := oktaV3.NewAPIClient(oktaConfiguratiopn)
+		client := oktaV4.NewAPIClient(oktaConfiguratiopn)
 
 		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
 		return client, err
@@ -150,11 +150,11 @@ func ConnectV3(ctx context.Context, d *plugin.QueryData) (*oktaV3.APIClient, err
 	* 3. Environment variables
 	* 4. Configuration explicitly passed to the constructor (see the example in Getting started)
 	*	*/
-	oktaConfiguratiopn, err := oktaV3.NewConfiguration(oktaV3.WithRequestTimeout(30), oktaV3.WithRateLimitMaxRetries(5))
+	oktaConfiguratiopn, err := oktaV4.NewConfiguration(oktaV4.WithRequestTimeout(30), oktaV4.WithRateLimitMaxRetries(5))
 	if err != nil {
 			return nil, err
 		}
-	client := oktaV3.NewAPIClient(oktaConfiguratiopn)
+	client := oktaV4.NewAPIClient(oktaConfiguratiopn)
 
 	// Save session into cache
 	d.ConnectionManager.Cache.Set(sessionCacheKey, client)

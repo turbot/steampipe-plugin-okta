@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/ettle/strcase v0.1.1
 	github.com/okta/okta-sdk-golang/v2 v2.5.0
-	github.com/okta/okta-sdk-golang/v3 v3.0.19
+	github.com/okta/okta-sdk-golang/v4 v4.0.0
 	github.com/turbot/go-kit v0.9.0-rc.1
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.8.0
 )
@@ -37,7 +37,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gertd/go-pluralize v0.2.1 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/glog v1.1.2 // indirect
