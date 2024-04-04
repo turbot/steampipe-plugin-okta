@@ -23,7 +23,44 @@ func tableOktaDevice() *plugin.Table {
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaDevices,
-			// TODO: Optional qualifier
+			KeyColumns: plugin.KeyColumnSlice{
+				{
+					Name:    "status",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "display_name",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "platform",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "model",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "os_version",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "serial_number",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "sid",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "udid",
+					Require: plugin.Optional,
+				},
+				{
+					Name:    "imei",
+					Require: plugin.Optional,
+				},
+			},
 		},
 		HydrateConfig: []plugin.HydrateConfig{
 			{
@@ -40,6 +77,13 @@ func tableOktaDevice() *plugin.Table {
 			{Name: "resource_id", Type: proto.ColumnType_STRING, Description: "Alternate key for the Id."},
 			{Name: "resource_type", Type: proto.ColumnType_STRING, Description: "The resource type."},
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "The state object of the device."},
+			{Name: "platform", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Platform"), Description: "Platform of the device."},
+			{Name: "model", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Model"), Description: "Model of the device."},
+			{Name: "os_version", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.OsVersion"), Description: "Version of the device OS."},
+			{Name: "serial_number", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.SerialNumber"), Description: "Serial number of the device."},
+			{Name: "sid", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Sid"), Description: "Windows Security identifier of the device."},
+			{Name: "udid", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Udid"), Description: "macOS Unique Device identifier of the device."},
+			{Name: "imei", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Imei"), Description: "International Mobile Equipment Identity (IMEI) of the device"},
 
 			// JSON Columns
 			{Name: "profile", Type: proto.ColumnType_JSON, Description: "The Device's Profile properties."},
@@ -76,8 +120,13 @@ func listOktaDevices(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrate
 		}
 	}
 
+	searchParam := buildDeviceFilterParam(d)
+
 	deviceReq := client.DeviceAPI.ListDevices(ctx).Expand("userSummary")
 	deviceReq = deviceReq.Limit(int32(maxLimit))
+	if searchParam != "" {
+		deviceReq = deviceReq.Search(searchParam)
+	}
 
 	devices, resp, err := deviceReq.Execute()
 	if err != nil {
@@ -144,4 +193,48 @@ func getOktaDevice(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	}
 
 	return nil, nil
+}
+
+//// UTILITY FUNCTION
+
+func buildDeviceFilterParam(d *plugin.QueryData) string {
+	search := ""
+
+	qualsMap := map[string]string{
+		"status":        "status",
+		"display_name":  "profile.displayName",
+		"platform":      "profile.platform",
+		"model":         "profile.model",
+		"os_version":    "profile.osVersion",
+		"serial_number": "profile.serialNumber",
+		"sid":           "profile.sid",
+		"udid":          "profile.udid",
+		"imei":          "profile.imei",
+	}
+
+	for columnName, searchKey := range qualsMap {
+		if d.Quals[columnName] != nil {
+			qual := d.Quals[columnName].Quals
+			for _, q := range qual {
+				val := q.Value.GetStringValue()
+				switch q.Operator {
+				case "=":
+					if search == "" {
+						search = searchKey + " eq " + "\"" + val + "\""
+					} else {
+						search = search + " and " + searchKey + " eq " + "\"" + val + "\""
+					}
+				case "<>":
+					if search == "" {
+						search = searchKey + " ne " + "\"" + val + "\""
+					} else {
+						search = search + " and " + searchKey + " ne " + "\"" + val + "\""
+					}
+				}
+			}
+
+		}
+	}
+
+	return search
 }
