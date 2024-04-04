@@ -2,7 +2,6 @@ package okta
 
 import (
 	"context"
-	"time"
 
 	"github.com/okta/okta-sdk-golang/v4/okta"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -122,7 +121,6 @@ func listOktaDevices(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrate
 	}
 
 	searchParam := buildDeviceFilterParam(d)
-	plugin.Logger(ctx).Error("Search Param ====>>>", searchParam)
 
 	deviceReq := client.DeviceAPI.ListDevices(ctx).Expand("userSummary")
 	deviceReq = deviceReq.Limit(int32(maxLimit))
@@ -218,37 +216,21 @@ func buildDeviceFilterParam(d *plugin.QueryData) string {
 		if d.Quals[columnName] != nil {
 			qual := d.Quals[columnName].Quals
 			for _, q := range qual {
-				operator := ""
-				if columnName == "last_updated" {
-					switch q.Operator {
-					case "<=", "<":
-						operator = "lt"
-					case ">=", ">":
-						operator = "gt"
-
-					}
-					val := q.Value.GetTimestampValue().AsTime().Format(time.RFC3339)
+				val := q.Value.GetStringValue()
+				switch q.Operator {
+				case "=":
 					if search == "" {
-						search = searchKey + " " + operator + " " + "\"" + val + "\""
+						search = searchKey + " eq " + "\"" + val + "\""
+					} else {
+						search = search + " and " + searchKey + " eq " + "\"" + val + "\""
 					}
-				} else {
-					val := q.Value.GetStringValue()
-					switch q.Operator {
-					case "=":
-						if search == "" {
-							search = searchKey + " eq " + "\"" + val + "\""
-						} else {
-							search = search + " and " + searchKey + " eq " + "\"" + val + "\""
-						}
-					case "<>":
-						if search == "" {
-							search = searchKey + " ne " + "\"" + val + "\""
-						} else {
-							search = search + " and " + searchKey + " ne " + "\"" + val + "\""
-						}
+				case "<>":
+					if search == "" {
+						search = searchKey + " ne " + "\"" + val + "\""
+					} else {
+						search = search + " and " + searchKey + " ne " + "\"" + val + "\""
 					}
 				}
-
 			}
 
 		}
