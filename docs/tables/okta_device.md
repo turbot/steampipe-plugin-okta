@@ -107,19 +107,19 @@ Explore the valuable insights that can enhance device security management, compl
 select
   display_name,
   id,
+  imei,
+  os_version,
+  platform,
+  sid,
+  udid,
+  model,
+  serial_number,
   profile ->> 'DiskEncryptionType' as disk_encryption_type,
-  profile ->> 'DisplayName' as display_name,
-  profile ->> 'Imei' as imei,
   profile ->> 'IntegrityJailbreak' as integrity_jailbreak,
   profile ->> 'Manufacturer' as manufacturer,
   profile ->> 'Meid' as meid,
-  profile ->> 'Model' as model,
-  profile ->> 'OsVersion' as os_version,
-  profile ->> 'Platform' as platform,
   profile ->> 'Registered' as registered,
   profile ->> 'SecureHardwarePresent' as secure_hardware_present,
-  profile ->> 'SerialNumber' as serial_number,
-  profile ->> 'Sid' as sid,
   profile ->> 'TpmPublicKeyHash' as tpm_public_key_hash
 from
   okta_device;
@@ -129,19 +129,19 @@ from
 select
   display_name,
   id,
+  imei,
+  os_version,
+  platform,
+  sid,
+  udid,
+  model,
+  serial_number,
   json_extract(profile, '$.DiskEncryptionType') as disk_encryption_type,
-  json_extract(profile, '$.DisplayName') as display_name,
-  json_extract(profile, '$.Imei') as imei,
   json_extract(profile, '$.IntegrityJailbreak') as integrity_jailbreak,
   json_extract(profile, '$.Manufacturer') as manufacturer,
   json_extract(profile, '$.Meid') as meid,
-  json_extract(profile, '$.Model') as model,
-  json_extract(profile, '$.OsVersion') as os_version,
-  json_extract(profile, '$.Platform') as platform,
   json_extract(profile, '$.Registered') as registered,
   json_extract(profile, '$.SecureHardwarePresent') as secure_hardware_present,
-  json_extract(profile, '$.SerialNumber') as serial_number,
-  json_extract(profile, '$.Sid') as sid,
   json_extract(profile, '$.TpmPublicKeyHash') as tpm_public_key_hash
 from
   okta_device;
