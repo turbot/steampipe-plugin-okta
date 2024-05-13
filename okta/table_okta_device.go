@@ -68,7 +68,7 @@ func tableOktaDevice() *plugin.Table {
 				MaxConcurrency: 10,
 			},
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "display_name", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.DisplayName"), Description: "Display name of the device."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for the device."},
@@ -94,7 +94,7 @@ func tableOktaDevice() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.DisplayName"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

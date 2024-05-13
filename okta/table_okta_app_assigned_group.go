@@ -33,7 +33,7 @@ func tableOktaApplicationAssignedGroup() *plugin.Table {
 			},
 		},
 
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for the group."},
 			{Name: "app_id", Type: proto.ColumnType_STRING, Description: "Unique key for the application."},
@@ -48,7 +48,7 @@ func tableOktaApplicationAssignedGroup() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Id"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

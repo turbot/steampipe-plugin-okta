@@ -25,7 +25,7 @@ func tableOktaTrustedOrigin() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOktaTrustedOrigins,
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "The name of the trusted origin."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "A unique key for the trusted origin."},
@@ -43,7 +43,7 @@ func tableOktaTrustedOrigin() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

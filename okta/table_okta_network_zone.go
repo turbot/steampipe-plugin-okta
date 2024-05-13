@@ -23,7 +23,7 @@ func tableOktaNetworkZone() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOktaNetworkZones,
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Unique name for the zone."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the network zone."},
@@ -45,7 +45,7 @@ func tableOktaNetworkZone() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

@@ -33,7 +33,7 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 			},
 		},
 
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for the application user."},
 			{Name: "user_name", Type: proto.ColumnType_STRING, Transform: transform.FromField("Credentials.UserName"), Description: "The username of the application user."},
@@ -59,7 +59,7 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Id"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

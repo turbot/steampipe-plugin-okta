@@ -33,7 +33,7 @@ func tableOktaApplication() *plugin.Table {
 			},
 		},
 
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Unique key for app definition."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for app."},
@@ -54,7 +54,7 @@ func tableOktaApplication() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

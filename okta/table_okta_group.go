@@ -41,7 +41,7 @@ func tableOktaGroup() *plugin.Table {
 				MaxConcurrency: 10,
 			},
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Transform: transform.FromField("Profile.Name"), Description: "Name of the Group."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
@@ -61,7 +61,7 @@ func tableOktaGroup() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

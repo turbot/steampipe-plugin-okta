@@ -14,6 +14,12 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 	p := &plugin.Plugin{
 		Name:             pluginName,
 		DefaultTransform: transform.FromCamel(),
+		ConnectionKeyColumns: []plugin.ConnectionKeyColumn{
+			{
+				Name:    "domain",
+				Hydrate: getOktaDomainName,
+			},
+		},
 		ConnectionConfigSchema: &plugin.ConnectionConfigSchema{
 			NewInstance: ConfigInstance,
 		},

@@ -41,15 +41,15 @@ func tableOktaUser() *plugin.Table {
 		},
 		HydrateConfig: []plugin.HydrateConfig{
 			{
-				Func:           listUserGroups,
+				Func: listUserGroups,
 				MaxConcurrency: 10,
 			},
 			{
-				Func:           listAssignedRolesForUser,
+				Func: listAssignedRolesForUser,
 				MaxConcurrency: 10,
 			},
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "login", Type: proto.ColumnType_STRING, Transform: transform.From(userProfile), Description: "Unique identifier for the user (username)."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for user."},
@@ -75,7 +75,7 @@ func tableOktaUser() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.From(userProfile), Description: titleDescription},
-		},
+		}),
 	}
 }
 
@@ -233,6 +233,7 @@ func listAssignedRolesForUser(ctx context.Context, d *plugin.QueryData, h *plugi
 	logger.Trace("listAssignedRolesForUser")
 	user := h.Item.(*okta.User)
 	client, err := Connect(ctx, d)
+	plugin.Logger(ctx).Error("User ID ===>>", user.Id)
 	if err != nil {
 		logger.Error("listUserGroups", "connect_error", err)
 		return nil, err
