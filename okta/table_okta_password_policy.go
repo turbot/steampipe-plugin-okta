@@ -52,13 +52,12 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 
-	input := &query.Params{}
 	if err != nil {
-		logger.Error("listOktaPolicies", "connect_error", err)
+		logger.Error("listPolicies", "connect_error", err)
 		return nil, err
 	}
 
-	input.Expand = "rules"
+	input := &query.Params{}
 	switch d.Table.Name {
 	case "okta_password_policy":
 		input.Type = "PASSWORD"
@@ -66,9 +65,20 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 		input.Type = "MFA_ENROLL"
 	}
 
+	config := GetConfig(d.Connection)
+	if config.EngineType != nil && *config.EngineType == "identity" {
+		return listOktaPoliciesIdentityEngine(ctx, client, d, input)
+	}
+	return listOktaPoliciesClassicEngine(ctx, client, d, input)
+}
+
+func listOktaPoliciesClassicEngine(ctx context.Context, client *okta.Client, d *plugin.QueryData, input *query.Params) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	input.Expand = "rules"
+
 	policies, resp, err := listPoliciesWithSettings(ctx, *client, input)
 	if err != nil {
-		logger.Error("listPolicies", "list_policies_with_settings_error", err)
+		logger.Error("listOktaPoliciesClassicEngine", "list_policies_with_settings_error", err)
 		return nil, err
 	}
 
@@ -83,10 +93,10 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 
 	// paging
 	for resp.HasNextPage() {
-		var nextPolicySet []*okta.Policy
+		var nextPolicySet []*PolicyStructure
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listPolicies", "list_policies_with_settings_paging_error", err)
+			logger.Error("listOktaPoliciesClassicEngine", "list_policies_with_settings_paging_error", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
@@ -102,7 +112,74 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 	return nil, err
 }
 
-// Generic policy returned by
+func listOktaPoliciesIdentityEngine(ctx context.Context, client *okta.Client, d *plugin.QueryData, input *query.Params) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+
+	policies, resp, err := listPoliciesWithSettings(ctx, *client, input)
+	if err != nil {
+		logger.Error("listOktaPoliciesIdentityEngine", "list_policies_error", err)
+		return nil, err
+	}
+
+	for _, policy := range policies {
+		// Additional API call to get rules for Identity Engine
+		rules, _, err := client.Policy.ListPolicyRules(ctx, policy.Id)
+		if err != nil {
+			logger.Error("listOktaPoliciesIdentityEngine", "list_policy_rules_error", err)
+			return nil, err
+		}
+		// Ensure policy.Embedded is a map[string]interface{}
+		if policy.Embedded == nil {
+			policy.Embedded = make(map[string]interface{})
+		}
+		// Embed the rules
+		policyEmbedded := policy.Embedded.(map[string]interface{})
+		policyEmbedded["rules"] = rules
+
+		d.StreamListItem(ctx, policy)
+
+		// Context can be cancelled due to manual cancellation or the limit has been hit
+		if d.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
+	}
+
+	// paging
+	for resp.HasNextPage() {
+		var nextPolicySet []*PolicyStructure
+		resp, err = resp.Next(ctx, &nextPolicySet)
+		if err != nil {
+			logger.Error("listOktaPoliciesIdentityEngine", "list_policies_paging_error", err)
+			return nil, err
+		}
+		for _, policy := range nextPolicySet {
+			// Additional API call to get rules for Identity Engine
+			rules, _, err := client.Policy.ListPolicyRules(ctx, policy.Id)
+			if err != nil {
+				logger.Error("listOktaPoliciesIdentityEngine", "list_policy_rules_error", err)
+				return nil, err
+			}
+			// Ensure policy.Embedded is a map[string]interface{}
+			if policy.Embedded == nil {
+				policy.Embedded = make(map[string]interface{})
+			}
+			// Embed the rules
+			policyEmbedded := policy.Embedded.(map[string]interface{})
+			policyEmbedded["rules"] = rules
+
+			d.StreamListItem(ctx, policy)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
+		}
+	}
+
+	return nil, err
+}
+
+// Generic policy returned by listPoliciesWithSettings
 func listPoliciesWithSettings(ctx context.Context, client okta.Client, qp *query.Params) ([]*PolicyStructure, *okta.Response, error) {
 	url := "/api/v1/policies"
 	if qp != nil {
@@ -125,7 +202,7 @@ func listPoliciesWithSettings(ctx context.Context, client okta.Client, qp *query
 	return policies, resp, nil
 }
 
-// generic policy missing Settings field
+// PolicyStructure represents the structure of a policy, including embedded rules for Identity Engine
 type PolicyStructure struct {
 	Embedded    interface{}                `json:"_embedded,omitempty"`
 	Links       interface{}                `json:"_links,omitempty"`

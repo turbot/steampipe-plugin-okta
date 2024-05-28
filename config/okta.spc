@@ -1,6 +1,8 @@
 connection "okta" {
   plugin = "okta"
 
+  # Specify the Okta engine type. It should be either "classic" or "identity"
+  engine_type = "classic"
   # Get your API token from Okta https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/
   # domain = "https://<your_okta_domain>.okta.com"
 
