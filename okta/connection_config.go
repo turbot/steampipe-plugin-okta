@@ -9,6 +9,7 @@ type oktaConfig struct {
 	Token          *string `hcl:"token"`
 	ClientID       *string `hcl:"client_id"`
 	PrivateKey     *string `hcl:"private_key"`
+	PrivateKeyID   *string `hcl:"private_key_id"`
 	RequestTimeout *int64  `hcl:"request_timeout"`
 	MaxRetries     *int32  `hcl:"max_retries"`
 	MaxBackoff     *int64  `hcl:"max_backoff"`

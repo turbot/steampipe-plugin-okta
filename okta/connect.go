@@ -20,7 +20,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 
 	oktaConfig := GetConfig(d.Connection)
 
-	var domain, token, clientID, privateKey string
+	var domain, token, clientID, privateKey, privateKeyId string
 
 	// The default value has been set as per the API doc: https://github.com/okta/okta-sdk-golang?tab=readme-ov-file#environment-variables
 	// SDK supported environment variables: https://github.com/okta/okta-sdk-golang/blob/master/okta/config.go#L33-L70
@@ -99,6 +99,21 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 		privateKey = *oktaConfig.PrivateKey
 	} else {
 		privateKey = os.Getenv("OKTA_CLIENT_PRIVATEKEY")
+	}
+
+	if oktaConfig.PrivateKeyID != nil {
+		privateKeyId = *oktaConfig.PrivateKeyID
+	} else {
+		privateKeyId = os.Getenv("OKTA_CLIENT_PRIVATEKEYID")
+	}
+
+	if domain != "" && clientID != "" && privateKey != "" && privateKeyId != "" {
+		_, client, err := okta.NewClient(ctx, okta.WithOrgUrl(domain), okta.WithAuthorizationMode("PrivateKey"), okta.WithClientId(clientID), okta.WithPrivateKey(privateKey), okta.WithPrivateKeyId(privateKeyId) , okta.WithScopes(scopes), okta.WithRequestTimeout(requestTimeout), okta.WithRateLimitMaxRetries(maxRetries), okta.WithRateLimitMaxBackOff(maxBackoff))
+		if err != nil {
+			return nil, err
+		}
+		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+		return client, err
 	}
 
 	if domain != "" && clientID != "" && privateKey != "" {

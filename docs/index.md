@@ -78,6 +78,10 @@ connection "okta" {
   # client_id   = "0oa10zpa2bo6tAm9Test"
   # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 
+  # Private key Id, needed if Okta service application has more then a single JWK registered
+  # Can also be set with the OKTA_CLIENT_PRIVATEKEYID environment variable.
+  # private_key_id = "a1234567-89ab-cdef-0123-456789abcdef"
+
   # The maximum number of attempts (including the initial call) Steampipe will
   # make for failing API calls. Can also be set with the OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES environment variable.
   # Defaults to 5 and must be greater than or equal to 1.
