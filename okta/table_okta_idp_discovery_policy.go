@@ -19,7 +19,7 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOktaIdpDiscoveryPolicies,
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
@@ -38,7 +38,7 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

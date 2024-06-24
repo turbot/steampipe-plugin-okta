@@ -30,7 +30,7 @@ func tableOktaAuthServer() *plugin.Table {
 			},
 		},
 
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "The name for the authorization server."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for the authorization server."},
@@ -49,7 +49,7 @@ func tableOktaAuthServer() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		},
+		}),
 	}
 }
 

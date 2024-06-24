@@ -20,7 +20,7 @@ func tableOktaPasswordPolicy() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listPolicies,
 		},
-		Columns: listPoliciesWithSettingsColumns(),
+		Columns: commonColumns(listPoliciesWithSettingsColumns()),
 	}
 }
 

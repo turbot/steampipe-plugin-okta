@@ -31,7 +31,7 @@ func tableOktaFactor() *plugin.Table {
 				{Name: "user_id", Require: plugin.Optional},
 			},
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique key for Group.", Transform: transform.FromField("Factor.Id")},
 			{Name: "user_id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
@@ -50,7 +50,7 @@ func tableOktaFactor() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Factor.Id"), Description: titleDescription},
-		},
+		}),
 	}
 }
 
