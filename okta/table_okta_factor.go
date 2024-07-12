@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
+	oktav4 "github.com/okta/okta-sdk-golang/v4/okta"
 	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/go-kit/types"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -45,6 +46,7 @@ func tableOktaFactor() *plugin.Table {
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "The current status of the factor.", Transform: transform.FromField("Factor.Status")},
 
 			// JSON Columns
+			{Name: "profile", Type: proto.ColumnType_JSON, Description: "Specific attributes related to the Factor.", Transform: transform.FromField("Factor.Profile")},
 			{Name: "embedded", Type: proto.ColumnType_JSON, Description: "The Group's Profile properties.", Transform: transform.FromField("Factor.Embedded")},
 			{Name: "verify", Type: proto.ColumnType_JSON, Description: "List of all users that are a member of this Group.", Transform: transform.FromField("Factor.Verify")},
 
@@ -57,16 +59,16 @@ func tableOktaFactor() *plugin.Table {
 type UserFactorInfo struct {
 	UserId   string
 	UserName string
-	Factor   okta.Factor
+	Factor   interface{}
 }
 
 //// LIST FUNCTION
 
 func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	client, err := Connect(ctx, d)
+	client, err := ConnectV4(ctx, d)
 	if err != nil {
-		logger.Error("listOktaFactors", "connect_error", err)
+		logger.Error("okta_factor.listOktaFactors", "connect_error", err)
 		return nil, err
 	}
 
@@ -96,9 +98,11 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		return nil, nil
 	}
 
-	factors, resp, err := client.UserFactor.ListFactors(ctx, userId)
+	factorReq := client.UserFactorAPI.ListFactors(ctx, userId)
+
+	factors, resp, err := factorReq.Execute()
 	if err != nil {
-		logger.Error("listOktaFactors", "list_factors_error", err)
+		logger.Error("okta_factor.listOktaFactors", "api_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -109,7 +113,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		d.StreamListItem(ctx, UserFactorInfo{
 			UserId:   userId,
 			UserName: userName,
-			Factor:   factor,
+			Factor:   factor.GetActualInstance(),
 		})
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -120,17 +124,18 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	// paging
 	for resp.HasNextPage() {
-		var nextFactorSet []*okta.Factor
-		resp, err = resp.Next(ctx, &nextFactorSet)
+		var nextFactorSet []oktav4.ListFactors200ResponseInner
+		resp, err = resp.Next(&nextFactorSet)
 		if err != nil {
-			logger.Error("listOktaFactors", "list_factors_paging_error", err)
+			logger.Error("okta_factor.listOktaFactors", "api_paging_error", err)
 			return nil, err
 		}
+
 		for _, factor := range nextFactorSet {
 			d.StreamListItem(ctx, UserFactorInfo{
 				UserId:   userId,
 				UserName: userName,
-				Factor:   *factor,
+				Factor:   factor.GetActualInstance(),
 			})
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -147,7 +152,6 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("getOktaFactor")
 	userId := d.EqualsQuals["user_id"].GetStringValue()
 	factorId := d.EqualsQuals["id"].GetStringValue()
 
@@ -155,15 +159,16 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return nil, nil
 	}
 
-	client, err := Connect(ctx, d)
+	client, err := ConnectV4(ctx, d)
 	if err != nil {
-		logger.Error("getOktaFactor", "connect_error", err)
+		logger.Error("okta_factor.getOktaFactor", "connection_error", err)
 		return nil, err
 	}
 
-	user, _, err := client.User.GetUser(ctx, userId)
+	userReq := client.UserAPI.GetUser(ctx, userId)
+	user, _, err := userReq.Execute()
 	if err != nil {
-		logger.Error("getOktaFactor", "get_user_error", err)
+		logger.Error("okta_factor.getOktaFactor", "GetUser", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -171,14 +176,14 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	}
 
 	userProfile := *user.Profile
-	userName := userProfile["login"].(string)
+	userName := userProfile.Login
 
-	var factorInstance okta.Factor
-	factor, _, err := client.UserFactor.GetFactor(ctx, userId, factorId, factorInstance)
+	factorReq := client.UserFactorAPI.GetFactor(ctx, userId, factorId)
+	result, _, err := factorReq.Execute()
 	if err != nil {
-		logger.Error("getOktaFactor", "get_factor_error", err)
+		logger.Error("okta_factor.getOktaFactor", "api_error", err)
 		return nil, err
 	}
 
-	return &UserFactorInfo{UserId: userId, UserName: userName, Factor: factor}, nil
+	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: result.GetActualInstance()}, nil
 }
