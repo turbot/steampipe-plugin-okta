@@ -1,3 +1,20 @@
+## v0.12.0 [2024-7-12]
+
+_What's new?_
+
+- New tables added
+  - [okta_device](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_device) ([#50](https://github.com/turbot/steampipe-plugin-okta/pull/113))
+
+_Enhancements_
+
+- The `domain` column has now been assigned as a connection key column across all the tables which facilitates more precise and efficient querying across multiple Okta organizations. ([#120](https://github.com/turbot/steampipe-plugin-okta/pull/120))
+- Added support to specify the time period in `.spc` file for `max retries`, `request timeout`, and `max backoff time` as required. ([#112](https://github.com/turbot/steampipe-plugin-okta/pull/112))
+- Added `profile` column to the `okta_factor` table. ([#130](https://github.com/turbot/steampipe-plugin-okta/pull/130))
+
+_Dependencies_
+
+- Recompiled plugin with [steampipe-plugin-sdk v5.10.1](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v5101-2024-05-09) which ensures that `QueryData` passed to `ConnectionKeyColumns` value callback is populated with `ConnectionManager`. ([#120](https://github.com/turbot/steampipe-plugin-okta/pull/120))
+
 ## v0.11.0 [2023-12-12]
 
 _What's new?_
