@@ -21,7 +21,7 @@ func tableOktaGroupOwner() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate:       listOktaGroupOwners,
 			ParentHydrate: listOktaGroups,
-			KeyColumns: plugin.OptionalColumns([]string{"group_id"}),
+			KeyColumns:    plugin.OptionalColumns([]string{"group_id"}),
 		},
 		Columns: commonColumns([]*plugin.Column{
 			{Name: "group_id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
@@ -87,16 +87,16 @@ func listOktaGroupOwners(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 
 	for _, owner := range owners {
 		d.StreamListItem(ctx, GroupOwner{
-				GroupId:              &groupId,
-				DisplayName:          owner.DisplayName,
-				Id:                   owner.Id,
-				LastUpdated:          owner.LastUpdated,
-				OriginId:             owner.OriginId,
-				OriginType:           owner.OriginType,
-				Resolved:             owner.Resolved,
-				Type:                 owner.Type,
-				AdditionalProperties: owner.AdditionalProperties,
-			})
+			GroupId:              &groupId,
+			DisplayName:          owner.DisplayName,
+			Id:                   owner.Id,
+			LastUpdated:          owner.LastUpdated,
+			OriginId:             owner.OriginId,
+			OriginType:           owner.OriginType,
+			Resolved:             owner.Resolved,
+			Type:                 owner.Type,
+			AdditionalProperties: owner.AdditionalProperties,
+		})
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
 		if d.RowsRemaining(ctx) == 0 {
