@@ -27,7 +27,7 @@ func tableOktaGroupOwner() *plugin.Table {
 			{Name: "group_id", Type: proto.ColumnType_STRING, Description: "Unique key for Group."},
 			{Name: "display_name", Type: proto.ColumnType_STRING, Description: "The display name of the group owner."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "The ID of the group owner."},
-			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Transform: transform.FromField("LastUpdated").Transform(transform.NullIfZeroValue), Description: "Timestamp when the group owner was last updated."},
+			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Transform: transform.FromField("LastUpdated").Transform(transform.NullIfZeroValue).Transform(convertLastUpdatedTimestamp), Description: "Timestamp when the group owner was last updated."},
 			{Name: "origin_id", Type: proto.ColumnType_STRING, Description: "The ID of the app instance if the originType is APPLICATION. This value is NULL if originType is OKTA_DIRECTORY."},
 			{Name: "origin_type", Type: proto.ColumnType_STRING, Description: "The source where group ownership is managed."},
 			{Name: "type", Type: proto.ColumnType_STRING, Description: "The entity type of the owner."},
@@ -133,4 +133,23 @@ func listOktaGroupOwners(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	}
 
 	return nil, nil
+}
+
+//// TRANSFORM FUNCTION
+
+// Convert "2023-09-26 12:18:57.0" time format to "2006-01-02T15:04:05Z07:00"
+func convertLastUpdatedTimestamp(ctx context.Context, d *transform.TransformData) (interface{}, error) {
+	value := d.Value
+	if value == nil {
+		return nil, nil
+	}
+	lastUpdatedTime := value.(*time.Time)
+
+	// Define the output layout
+	outputLayout := "2006-01-02T15:04:05Z07:00"
+
+	// Parse the input time string
+	outputTime := lastUpdatedTime.Format(outputLayout)
+
+	return outputTime, nil
 }
