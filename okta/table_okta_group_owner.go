@@ -146,7 +146,7 @@ func convertLastUpdatedTimestamp(ctx context.Context, d *transform.TransformData
 	lastUpdatedTime := value.(*time.Time)
 
 	// Define the output layout
-	outputLayout := "2006-01-02T15:04:05Z07:00"
+	outputLayout := time.RFC3339
 
 	// Parse the input time string
 	outputTime := lastUpdatedTime.Format(outputLayout)
