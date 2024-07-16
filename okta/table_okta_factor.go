@@ -110,15 +110,17 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	}
 
 	for _, factor := range factors {
-		d.StreamListItem(ctx, UserFactorInfo{
-			UserId:   userId,
-			UserName: userName,
-			Factor:   factor.GetActualInstance(),
-		})
+		if factor.GetActualInstance() != nil {
+			d.StreamListItem(ctx, UserFactorInfo{
+				UserId:   userId,
+				UserName: userName,
+				Factor:   factor.GetActualInstance(),
+			})
 
-		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.RowsRemaining(ctx) == 0 {
-			return nil, nil
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -132,15 +134,17 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		}
 
 		for _, factor := range nextFactorSet {
-			d.StreamListItem(ctx, UserFactorInfo{
-				UserId:   userId,
-				UserName: userName,
-				Factor:   factor.GetActualInstance(),
-			})
+			if factor.GetActualInstance() != nil {
+				d.StreamListItem(ctx, UserFactorInfo{
+					UserId:   userId,
+					UserName: userName,
+					Factor:   factor.GetActualInstance(),
+				})
 
-			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.RowsRemaining(ctx) == 0 {
-				return nil, nil
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.RowsRemaining(ctx) == 0 {
+					return nil, nil
+				}
 			}
 		}
 	}
@@ -183,6 +187,10 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	if err != nil {
 		logger.Error("okta_factor.getOktaFactor", "api_error", err)
 		return nil, err
+	}
+
+	if result.GetActualInstance() == nil {
+		return nil, nil
 	}
 
 	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: result.GetActualInstance()}, nil
