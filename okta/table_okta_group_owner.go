@@ -139,17 +139,23 @@ func listOktaGroupOwners(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 
 // Convert "2023-09-26 12:18:57.0" time format to "2006-01-02T15:04:05Z07:00"
 func convertLastUpdatedTimestamp(ctx context.Context, d *transform.TransformData) (interface{}, error) {
+	plugin.Logger(ctx).Error("convertLastUpdatedTimestamp", "called...", "ok")
 	value := d.Value
 	if value == nil {
 		return nil, nil
 	}
 	lastUpdatedTime := value.(*time.Time)
 
-	// Define the output layout
-	outputLayout := time.RFC3339
+	layout := "2006-01-02 15:04:05.0"
+	formattedTime := lastUpdatedTime.Format(layout)
 
+	parsedTime, err := time.Parse(layout, formattedTime)
+	if err != nil {
+		plugin.Logger(ctx).Error("okta_group_owner.convertLastUpdatedTimestamp", "error in parsing the input time", err)
+		return nil, err
+	}
 	// Parse the input time string
-	outputTime := lastUpdatedTime.Format(outputLayout)
+	rfc3339Time := parsedTime.Format(time.RFC3339)
 
-	return outputTime, nil
+	return rfc3339Time, nil
 }
