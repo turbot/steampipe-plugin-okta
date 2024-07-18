@@ -59,7 +59,12 @@ func tableOktaFactor() *plugin.Table {
 type UserFactorInfo struct {
 	UserId   string
 	UserName string
-	Factor   interface{}
+	Factor   OktaFactor
+}
+
+type OktaFactor struct {
+	oktav4.UserFactor
+	Profile interface{}
 }
 
 //// LIST FUNCTION
@@ -111,10 +116,11 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	for _, factor := range factors {
 		if factor.GetActualInstance() != nil {
+			factorDetails := getFactorDetails(factor.GetActualInstance())
 			d.StreamListItem(ctx, UserFactorInfo{
 				UserId:   userId,
 				UserName: userName,
-				Factor:   factor.GetActualInstance(),
+				Factor:   factorDetails,
 			})
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -135,10 +141,11 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 		for _, factor := range nextFactorSet {
 			if factor.GetActualInstance() != nil {
+				f := getFactorDetails(factor.GetActualInstance())
 				d.StreamListItem(ctx, UserFactorInfo{
 					UserId:   userId,
 					UserName: userName,
-					Factor:   factor.GetActualInstance(),
+					Factor:   f,
 				})
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -192,6 +199,77 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	if result.GetActualInstance() == nil {
 		return nil, nil
 	}
+	f := getFactorDetails(result.GetActualInstance())
 
-	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: result.GetActualInstance()}, nil
+	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: f}, nil
+}
+
+//// UTILITY FUNCTION
+
+func getFactorDetails(i interface{}) OktaFactor {
+	f := OktaFactor{}
+
+	switch item := i.(type) {
+	case *oktav4.UserFactorCall:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorCustomHOTP:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorEmail:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorHardware:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorPush:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorSMS:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorSecurityQuestion:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorTOTP:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorToken:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorU2F:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorWeb:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorWebAuthn:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	}
+	return f
 }
