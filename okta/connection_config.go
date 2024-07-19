@@ -12,6 +12,7 @@ type oktaConfig struct {
 	RequestTimeout *int64  `hcl:"request_timeout"`
 	MaxRetries     *int32  `hcl:"max_retries"`
 	MaxBackoff     *int64  `hcl:"max_backoff"`
+	EngineType     *string `hcl:"engine_type"` // Specifies the engine type to be used for the connection. Supported values are 'classic' and 'identity'. Default value is 'classic'.
 }
 
 func ConfigInstance() interface{} {
