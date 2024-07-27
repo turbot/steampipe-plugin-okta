@@ -2,6 +2,7 @@ package okta
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -39,16 +40,24 @@ func getOktaDomainNameCacheKey(ctx context.Context, d *plugin.QueryData, h *plug
 }
 
 func getOktaDomainNameUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	cfg := GetConfig(d.Connection)
+	// Retrieve the Okta configuration
+	config := GetConfig(d.Connection)
 
-	domain := cfg.Domain
+	// Retrieve the domain from the config
+	domain := config.Domain
 
+	// If the domain is not set in the config, fall back to the environment variable
 	if domain == nil {
-		d := os.Getenv("OKTA_CLIENT_ORGURL")
-		domain = &d
+		envDomain := os.Getenv("OKTA_CLIENT_ORGURL")
+		domain = &envDomain
 	}
 
-	domainName := strings.Split(*domain, "https://")[1]
+	// Extract the domain name by removing the "https://" prefix
+	splitDomain := strings.SplitN(*domain, "https://", 2)
+	if len(splitDomain) != 2 {
+		return nil, fmt.Errorf("invalid okta domain format: %s", *domain)
+	}
+	domainName := splitDomain[1]
 
 	return domainName, nil
 }
