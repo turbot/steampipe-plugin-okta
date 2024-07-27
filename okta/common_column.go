@@ -2,6 +2,7 @@ package okta
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -38,10 +39,16 @@ func getOktaDomainNameCacheKey(ctx context.Context, d *plugin.QueryData, h *plug
 }
 
 func getOktaDomainNameUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-
 	cfg := GetConfig(d.Connection)
 
-	domainName := strings.Split(*cfg.Domain, "https://")[1]
+	domain := cfg.Domain
+
+	if domain == nil {
+		d := os.Getenv("OKTA_CLIENT_ORGURL")
+		domain = &d
+	}
+
+	domainName := strings.Split(*domain, "https://")[1]
 
 	return domainName, nil
 }
