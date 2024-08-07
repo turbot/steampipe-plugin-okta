@@ -2,7 +2,7 @@
 
 _Bug fixes_
 
-- Fixed `nil pointer dereference` error for table `okta_factor`. ([#137](https://github.com/turbot/steampipe-plugin-okta/pull/137))
+- Fixed the `okta_factor` table to correctly return data instead of a `nil pointer dereference` error. ([#137](https://github.com/turbot/steampipe-plugin-okta/pull/137))
 
 ## v0.12.0 [2024-7-12]
 
