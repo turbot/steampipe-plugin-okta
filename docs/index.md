@@ -83,7 +83,7 @@ connection "okta" {
   # Okta App client id, used with PrivateKey OAuth auth mode. Can also be set with the OKTA_CLIENT_CLIENTID environment variable.
   # client_id   = "0oa10zpa2bo6tAm9Test"
 
-  # Private key value. Can also be set with the OKTA_CLIENT_PRIVATEKEY environment variable. Can also be set with the OKTA_CLIENT_PRIVATEKEY environment variable.
+  # Private key value. Can also be set with the OKTA_CLIENT_PRIVATEKEY environment variable.
   # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 
   # The maximum number of attempts (including the initial call) Steampipe will
