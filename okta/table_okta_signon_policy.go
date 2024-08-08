@@ -114,6 +114,11 @@ func getOktaPolicyRules(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 		policyId = item.Id
 	}
 
+	// Empty check
+	if policyId == "" {
+		return nil, nil
+	}
+	
 	client, err := Connect(ctx, d)
 	if err != nil {
 		logger.Error("getOktaPolicyRules", "connect_error", err)
