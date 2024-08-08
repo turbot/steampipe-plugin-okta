@@ -53,11 +53,18 @@ func listOktaAuthenticationPolicies(ctx context.Context, d *plugin.QueryData, _ 
 	}
 
 	config := GetConfig(d.Connection)
+	if config.EngineType == nil {
+		return nil, fmt.Errorf("'engine_type' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	}
+
 	if config.EngineType != nil && *config.EngineType == "identity" {
 		return listOktaAuthenticationPoliciesIdentityEngine(ctx, client, d)
 	}
 
 	logger.Error("listOktaAuthenticationPolicies", "identity_engine_required", "Authentication policies are only supported for the identity engine")
+	// Authentication policy is only supported for identity engine type.
+	// https://developer.okta.com/docs/reference/api/policy/#policy-types
+	// https://developer.okta.com/docs/reference/api/policy/#authentication-policy
 	return nil, fmt.Errorf("authentication policies are only supported for the identity engine")
 }
 

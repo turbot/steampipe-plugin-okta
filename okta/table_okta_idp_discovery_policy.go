@@ -2,6 +2,7 @@ package okta
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -43,62 +44,157 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 }
 
 func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
-	logger := plugin.Logger(ctx)
+	// logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
-
-	input := &query.Params{
-		Limit: 200,
-	}
-
 	if err != nil {
-		logger.Error("listOktaIdpDiscoveryPolicies", "connect_error", err)
+		plugin.Logger(ctx).Error("listOktaIdpDiscoveryPolicies", "connect_error", err)
 		return nil, err
 	}
-	if d.Table.Name == "okta_idp_discovery_policy" {
-		input.Type = "IDP_DISCOVERY"
-		input.Expand = "rules"
+
+	config := GetConfig(d.Connection)
+	if config.EngineType == nil {
+		return nil, fmt.Errorf("'engine_type' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
+
+	if config.EngineType != nil && *config.EngineType == "identity" {
+		return listOktaIdpDiscoveryPoliciesIdentityEngine(ctx, client, d)
+	}
+	return listOktaIdpDiscoveryPoliciesClassicEngine(ctx, client, d)
+}
+
+//// CLASSIC ENGINE LIST FUNCTION
+
+func listOktaIdpDiscoveryPoliciesClassicEngine(ctx context.Context, client *okta.Client, d *plugin.QueryData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+
+	// Define query parameters for listing policies
+	input := &query.Params{
+		Limit:  200,
+		Type:   "IDP_DISCOVERY",
+		Expand: "rules",
+	}
+
+	// Fetch policies
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
-		logger.Error("listOktaIdpDiscoveryPolicies", "list_policies_error", err)
+		logger.Error("listOktaIdpDiscoveryPoliciesClassicEngine", "list_policies_error", err)
 		return nil, err
 	}
+
+	// Stream each policy item
 	for _, policy := range policies {
 		d.StreamListItem(ctx, policy)
 
-		// Context can be cancelled due to manual cancellation or the limit has been hit
+		// Check if the context is canceled or the row limit is reached
 		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
-	// paging
+
+	// Handle paging
 	for resp.HasNextPage() {
-		var nextPolicySet []*okta.AuthorizationServerPolicy
+		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaIdpDiscoveryPolicies", "list_policies_paging_error", err)
+			logger.Error("listOktaIdpDiscoveryPoliciesClassicEngine", "list_policies_paging_error", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
 			d.StreamListItem(ctx, policy)
 
-			// Context can be cancelled due to manual cancellation or the limit has been hit
+			// Check if the context is canceled or the row limit is reached
 			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
 	}
-	return nil, err
+
+	return nil, nil
+}
+
+//// IDENTITY ENGINE LIST FUNCTION
+
+func listOktaIdpDiscoveryPoliciesIdentityEngine(ctx context.Context, client *okta.Client, d *plugin.QueryData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+
+	// Define query parameters for listing policies
+	input := &query.Params{
+		Limit: 200,
+		Type:  "IDP_DISCOVERY",
+	}
+
+	// Fetch policies
+	policies, resp, err := client.Policy.ListPolicies(ctx, input)
+	if err != nil {
+		logger.Error("listOktaIdpDiscoveryPoliciesIdentityEngine", "list_policies_error", err)
+		return nil, err
+	}
+
+	// Stream each policy item with additional rule fetching
+	for _, policy := range policies {
+		// Fetch rules for Identity Engine
+		rules, _, err := client.Policy.ListPolicyRules(ctx, policy.Id)
+		if err != nil {
+			logger.Error("listOktaIdpDiscoveryPoliciesIdentityEngine", "list_policy_rules_error", err)
+			return nil, err
+		}
+		policy.Embedded = map[string]interface{}{
+			"rules": rules,
+		}
+		d.StreamListItem(ctx, policy)
+
+		// Check if the context is canceled or the row limit is reached
+		if d.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
+	}
+
+	// Handle paging
+	for resp.HasNextPage() {
+		var nextPolicySet []*okta.Policy
+		resp, err = resp.Next(ctx, &nextPolicySet)
+		if err != nil {
+			logger.Error("listOktaIdpDiscoveryPoliciesIdentityEngine", "list_policies_paging_error", err)
+			return nil, err
+		}
+		for _, policy := range nextPolicySet {
+			// Fetch rules for Identity Engine
+			rules, _, err := client.Policy.ListPolicyRules(ctx, policy.Id)
+			if err != nil {
+				logger.Error("listOktaIdpDiscoveryPoliciesIdentityEngine", "list_policy_rules_error", err)
+				return nil, err
+			}
+			policy.Embedded = map[string]interface{}{
+				"rules": rules,
+			}
+			d.StreamListItem(ctx, policy)
+
+			// Check if the context is canceled or the row limit is reached
+			if d.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
+		}
+	}
+
+	return nil, nil
 }
 
 //// TRANSFORM FUNCTION
 
 func getpolicyRules(_ context.Context, d *transform.TransformData) (interface{}, error) {
-	policy := d.HydrateItem.(*okta.AuthorizationServerPolicy)
 
-	if policy.Embedded != nil {
-		rules := policy.Embedded.(map[string]interface{})
-		return rules["rules"], nil
+	switch item := d.HydrateItem.(type) {
+	case *okta.AuthorizationServerPolicy:
+		if item.Embedded != nil {
+			rules := item.Embedded.(map[string]interface{})
+			return rules["rules"], nil
+		}
+	case *okta.Policy:
+		if item.Embedded != nil {
+			rules := item.Embedded.(map[string]interface{})
+			return rules["rules"], nil
+		}
 	}
+
 	return nil, nil
 }

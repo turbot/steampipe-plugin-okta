@@ -2,6 +2,7 @@ package okta
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
@@ -66,6 +67,10 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 	}
 
 	config := GetConfig(d.Connection)
+	if config.EngineType == nil {
+		return nil, fmt.Errorf("'engine_type' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	}
+	
 	if config.EngineType != nil && *config.EngineType == "identity" {
 		return listOktaPoliciesIdentityEngine(ctx, client, d, input)
 	}
