@@ -59,7 +59,12 @@ func tableOktaFactor() *plugin.Table {
 type UserFactorInfo struct {
 	UserId   string
 	UserName string
-	Factor   interface{}
+	Factor   OktaFactor
+}
+
+type OktaFactor struct {
+	oktav4.UserFactor
+	Profile interface{}
 }
 
 //// LIST FUNCTION
@@ -110,15 +115,18 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	}
 
 	for _, factor := range factors {
-		d.StreamListItem(ctx, UserFactorInfo{
-			UserId:   userId,
-			UserName: userName,
-			Factor:   factor.GetActualInstance(),
-		})
+		if factor.GetActualInstance() != nil {
+			factorDetails := getFactorDetails(factor.GetActualInstance())
+			d.StreamListItem(ctx, UserFactorInfo{
+				UserId:   userId,
+				UserName: userName,
+				Factor:   factorDetails,
+			})
 
-		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.RowsRemaining(ctx) == 0 {
-			return nil, nil
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 
@@ -132,15 +140,18 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		}
 
 		for _, factor := range nextFactorSet {
-			d.StreamListItem(ctx, UserFactorInfo{
-				UserId:   userId,
-				UserName: userName,
-				Factor:   factor.GetActualInstance(),
-			})
+			if factor.GetActualInstance() != nil {
+				f := getFactorDetails(factor.GetActualInstance())
+				d.StreamListItem(ctx, UserFactorInfo{
+					UserId:   userId,
+					UserName: userName,
+					Factor:   f,
+				})
 
-			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.RowsRemaining(ctx) == 0 {
-				return nil, nil
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.RowsRemaining(ctx) == 0 {
+					return nil, nil
+				}
 			}
 		}
 	}
@@ -185,5 +196,80 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return nil, err
 	}
 
-	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: result.GetActualInstance()}, nil
+	if result.GetActualInstance() == nil {
+		return nil, nil
+	}
+	f := getFactorDetails(result.GetActualInstance())
+
+	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: f}, nil
+}
+
+//// UTILITY FUNCTION
+
+func getFactorDetails(i interface{}) OktaFactor {
+	f := OktaFactor{}
+
+	switch item := i.(type) {
+	case *oktav4.UserFactorCall:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorCustomHOTP:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorEmail:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorHardware:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorPush:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorSMS:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorSecurityQuestion:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorTOTP:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorToken:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorU2F:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorWeb:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	case *oktav4.UserFactorWebAuthn:
+		f = OktaFactor{
+			item.UserFactor,
+			item.Profile,
+		}
+	}
+	return f
 }

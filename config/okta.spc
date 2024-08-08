@@ -4,12 +4,14 @@ connection "okta" {
   # Specify the Okta engine type. It should be either "classic" or "identity"
   engine_type = "classic"
   # Get your API token from Okta https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/
+  # Can also be set with the OKTA_CLIENT_ORGURL environment variable.
   # domain = "https://<your_okta_domain>.okta.com"
 
   # Okta API token. Can also be set with the OKTA_CLIENT_TOKEN environment variable.
   # token  = "02d0YZgNSJwlNew6lZG-6qGThisisatest-token"
 
   # Or use an Okta application and the client credentials flow for authenticating: https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/
+  # Can also be set with the OKTA_CLIENT_ORGURL environment variable.
   # domain      = "https://<your_okta_domain>.okta.com"
 
   # Okta App client id, used with PrivateKey OAuth auth mode. Can also be set with the OKTA_CLIENT_CLIENTID environment variable.
