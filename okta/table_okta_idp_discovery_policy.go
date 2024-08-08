@@ -34,7 +34,7 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 
 			// JSON Columns
 			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
-			{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromP(getpolicyRules, "rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
+			{Name: "rules", Type: proto.ColumnType_JSON, Hydrate: getOktaPolicyRules, Transform: transform.FromValue(), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
@@ -46,9 +46,7 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 
-	input := &query.Params{
-		Limit: 200,
-	}
+	input := &query.Params{}
 
 	if err != nil {
 		logger.Error("listOktaIdpDiscoveryPolicies", "connect_error", err)
@@ -56,7 +54,6 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 	}
 	if d.Table.Name == "okta_idp_discovery_policy" {
 		input.Type = "IDP_DISCOVERY"
-		input.Expand = "rules"
 	}
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
@@ -89,16 +86,4 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 		}
 	}
 	return nil, err
-}
-
-//// TRANSFORM FUNCTION
-
-func getpolicyRules(_ context.Context, d *transform.TransformData) (interface{}, error) {
-	policy := d.HydrateItem.(*okta.AuthorizationServerPolicy)
-
-	if policy.Embedded != nil {
-		rules := policy.Embedded.(map[string]interface{})
-		return rules["rules"], nil
-	}
-	return nil, nil
 }

@@ -40,7 +40,7 @@ func listPoliciesWithSettingsColumns() []*plugin.Column {
 
 		// JSON Columns
 		{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
-		{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromField("Embedded.rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
+		{Name: "rules", Type: proto.ColumnType_JSON, Hydrate: getOktaPolicyRules, Transform: transform.FromValue(), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
 		{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings of the password policy."},
 
 		// Steampipe Columns
@@ -58,7 +58,6 @@ func listPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 		return nil, err
 	}
 
-	input.Expand = "rules"
 	switch d.Table.Name {
 	case "okta_password_policy":
 		input.Type = "PASSWORD"

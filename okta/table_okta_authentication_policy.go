@@ -12,14 +12,14 @@ import (
 
 //// TABLE DEFINITION
 
-func tableOktaSignonPolicy() *plugin.Table {
+func tableOktaAuthenticationPolicy() *plugin.Table {
 	return &plugin.Table{
-		Name:        "okta_signon_policy",
-		Description: "Okta Sign On Policy controls the manner in which a user is allowed to sign on to Okta, including whether they are challenged for multifactor authentication (MFA) and how long they are allowed to remain signed in before re-authenticating.",
+		Name:        "okta_authentication_policy",
+		Description: "Okta Authentication Policy controls the manner in which a user is authenticated, including MFA requirements.",
 		List: &plugin.ListConfig{
-			Hydrate: listOktaSignonPolicies,
+			Hydrate: listOktaAuthenticationPolicies,
 		},
-		Columns: commonColumns([]*plugin.Column{
+		Columns: []*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
@@ -38,27 +38,27 @@ func tableOktaSignonPolicy() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		}),
+		},
 	}
 }
 
-func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
-	logger := plugin.Logger(ctx)
-	client, err := Connect(ctx, d)
+//// LIST FUNCTION
 
-	input := &query.Params{}
-	if err != nil {
-		logger.Error("listOktaSignonPolicies", "connect_error", err)
-		return nil, err
+func listOktaAuthenticationPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	input := &query.Params{
+		Type: "ACCESS_POLICY",
 	}
 
-	if d.Table.Name == "okta_signon_policy" {
-		input.Type = "OKTA_SIGN_ON"
+	client, err := Connect(ctx, d)
+	if err != nil {
+		logger.Error("listOktaAuthenticationPolicies", "connect_error", err)
+		return nil, err
 	}
 
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
-		logger.Error("listOktaSignonPolicies", "list_policies_error", err)
+		logger.Error("listOktaAuthenticationPolicies", "list_policies_error", err)
 		return nil, err
 	}
 
@@ -76,7 +76,7 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaSignonPolicies", "list_policies_paging_error", err)
+			logger.Error("listOktaAuthenticationPolicies", "list_policies_paging_error", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
@@ -90,57 +90,4 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 	}
 
 	return nil, err
-}
-
-//// HYDRATE FUNCTION
-
-func getOktaPolicyRules(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	logger := plugin.Logger(ctx)
-	if h.Item == nil {
-		return nil, nil
-	}
-	policyId := ""
-
-	switch item := h.Item.(type) {
-	case *PolicyStructure:
-		policyId = item.Id
-	case *okta.Policy:
-		policyId = item.Id
-	case *okta.AuthorizationServerPolicy:
-		policyId = item.Id
-	}
-
-	// Empty check
-	if policyId == "" {
-		return nil, nil
-	}
-
-	client, err := Connect(ctx, d)
-	if err != nil {
-		logger.Error("getOktaPolicyRules", "connect_error", err)
-		return nil, err
-	}
-
-	var rules []*okta.PolicyRule
-
-	policyRules, resp, err := client.Policy.ListPolicyRules(ctx, policyId)
-	if err != nil {
-		logger.Error("getOktaPolicyRules", "list_policies_error", err)
-		return nil, err
-	}
-
-	rules = append(rules, policyRules...)
-
-	// paging
-	for resp.HasNextPage() {
-		var nextPolicyRules []*okta.PolicyRule
-		resp, err = resp.Next(ctx, &nextPolicyRules)
-		if err != nil {
-			logger.Error("getOktaPolicyRules", "list_policies_paging_error", err)
-			return nil, err
-		}
-		rules = append(rules, nextPolicyRules...)
-	}
-
-	return rules, nil
 }
