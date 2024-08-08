@@ -79,7 +79,6 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 			logger.Error("listOktaSignonPolicies", "list_policies_paging_error", err)
 			return nil, err
 		}
-		plugin.Logger(ctx).Error("Next page: ", resp.NextPage)
 		for _, policy := range nextPolicySet {
 			d.StreamListItem(ctx, policy)
 
