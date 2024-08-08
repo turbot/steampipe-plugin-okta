@@ -69,6 +69,10 @@ Installing the latest okta plugin will create a config file (~/.steampipe/config
 connection "okta" {
   plugin = "okta"
 
+  # Specify the Okta engine type. It should be either "classic" or "identity".
+  # https://support.okta.com/help/s/article/differences-between-okta-classic-and-okta-identity-engine-oie?language=en_US
+  # engine_type = "classic"
+
   # Get your API token from Okta https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/
   # Can also be set with the OKTA_CLIENT_ORGURL environment variable.
   # domain = "https://<your_okta_domain>.okta.com"

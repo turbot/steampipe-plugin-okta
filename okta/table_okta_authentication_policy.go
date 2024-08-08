@@ -13,14 +13,14 @@ import (
 
 //// TABLE DEFINITION
 
-func tableOktaSignonPolicy() *plugin.Table {
+func tableOktaAuthenticationPolicy() *plugin.Table {
 	return &plugin.Table{
-		Name:        "okta_signon_policy",
-		Description: "Okta Sign On Policy controls the manner in which a user is allowed to sign on to Okta, including whether they are challenged for multifactor authentication (MFA) and how long they are allowed to remain signed in before re-authenticating.",
+		Name:        "okta_authentication_policy",
+		Description: "Okta Authentication Policy controls the manner in which a user is authenticated, including MFA requirements.",
 		List: &plugin.ListConfig{
-			Hydrate: listOktaSignonPolicies,
+			Hydrate: listOktaAuthenticationPolicies,
 		},
-		Columns: commonColumns([]*plugin.Column{
+		Columns: []*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
@@ -39,17 +39,16 @@ func tableOktaSignonPolicy() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		}),
+		},
 	}
 }
 
-//// LIST FUNCTION
-
-func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
+func listOktaAuthenticationPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
+
 	if err != nil {
-		logger.Error("listOktaSignonPolicies", "connection_error", err)
+		logger.Error("listOktaAuthenticationPolicies", "connect_error", err)
 		return nil, err
 	}
 
@@ -59,83 +58,33 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 	}
 
 	if config.EngineType != nil && *config.EngineType == "identity" {
-		return listOktaSignonPoliciesIdentityEngine(ctx, client, d)
+		return listOktaAuthenticationPoliciesIdentityEngine(ctx, client, d)
 	}
-	return listOktaSignonPoliciesClassicEngine(ctx, client, d)
+
+	logger.Error("listOktaAuthenticationPolicies", "identity_engine_required", "Authentication policies are only supported for the identity engine")
+	// Authentication policy is only supported for identity engine type.
+	// https://developer.okta.com/docs/reference/api/policy/#policy-types
+	// https://developer.okta.com/docs/reference/api/policy/#authentication-policy
+	return nil, fmt.Errorf("authentication policies are only supported for the identity engine")
 }
 
-//// CLASSIC ENGINE LIST FUNCTION
-
-func listOktaSignonPoliciesClassicEngine(ctx context.Context, client *okta.Client, d *plugin.QueryData) (interface{}, error) {
+func listOktaAuthenticationPoliciesIdentityEngine(ctx context.Context, client *okta.Client, d *plugin.QueryData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-
-	// Define query parameters for listing policies
 	input := &query.Params{
-		Type:   "OKTA_SIGN_ON",
-		Expand: "rules",
+		Type: "ACCESS_POLICY",
 	}
 
-	// Fetch policies
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
-		logger.Error("listOktaSignonPoliciesClassicEngine", "list_policies_error", err)
+		logger.Error("listOktaAuthenticationPoliciesIdentityEngine", "list_policies_error", err)
 		return nil, err
 	}
 
-	// Stream each policy item
 	for _, policy := range policies {
-		d.StreamListItem(ctx, policy)
-
-		// Check if the context is canceled or the row limit is reached
-		if d.RowsRemaining(ctx) == 0 {
-			return nil, nil
-		}
-	}
-
-	// Handle paging
-	for resp.HasNextPage() {
-		var nextPolicySet []*okta.Policy
-		resp, err = resp.Next(ctx, &nextPolicySet)
-		if err != nil {
-			logger.Error("listOktaSignonPoliciesClassicEngine", "list_policies_paging_error", err)
-			return nil, err
-		}
-		for _, policy := range nextPolicySet {
-			d.StreamListItem(ctx, policy)
-
-			// Check if the context is canceled or the row limit is reached
-			if d.RowsRemaining(ctx) == 0 {
-				return nil, nil
-			}
-		}
-	}
-
-	return nil, nil
-}
-
-//// IDENTITY ENGINE LIST FUNCTION
-
-func listOktaSignonPoliciesIdentityEngine(ctx context.Context, client *okta.Client, d *plugin.QueryData) (interface{}, error) {
-	logger := plugin.Logger(ctx)
-
-	// Define query parameters for listing policies
-	input := &query.Params{
-		Type: "OKTA_SIGN_ON",
-	}
-
-	// Fetch policies
-	policies, resp, err := client.Policy.ListPolicies(ctx, input)
-	if err != nil {
-		logger.Error("listOktaSignonPoliciesIdentityEngine", "list_policies_error", err)
-		return nil, err
-	}
-
-	// Stream each policy item with additional rule fetching
-	for _, policy := range policies {
-		// Fetch rules for Identity Engine
+		// Additional API call to get rules for Identity Engine
 		rules, _, err := client.Policy.ListPolicyRules(ctx, policy.Id)
 		if err != nil {
-			logger.Error("listOktaSignonPoliciesIdentityEngine", "list_policy_rules_error", err)
+			logger.Error("listOktaAuthenticationPoliciesIdentityEngine", "list_policy_rules_error", err)
 			return nil, err
 		}
 		policy.Embedded = map[string]interface{}{
@@ -143,25 +92,25 @@ func listOktaSignonPoliciesIdentityEngine(ctx context.Context, client *okta.Clie
 		}
 		d.StreamListItem(ctx, policy)
 
-		// Check if the context is canceled or the row limit is reached
+		// Context can be cancelled due to manual cancellation or the limit has been hit
 		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
 
-	// Handle paging
+	// paging
 	for resp.HasNextPage() {
 		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaSignonPoliciesIdentityEngine", "list_policies_paging_error", err)
+			logger.Error("listOktaAuthenticationPoliciesIdentityEngine", "list_policies_paging_error", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
-			// Fetch rules for Identity Engine
+			// Additional API call to get rules for Identity Engine
 			rules, _, err := client.Policy.ListPolicyRules(ctx, policy.Id)
 			if err != nil {
-				logger.Error("listOktaSignonPoliciesIdentityEngine", "list_policy_rules_error", err)
+				logger.Error("listOktaAuthenticationPoliciesIdentityEngine", "list_policy_rules_error", err)
 				return nil, err
 			}
 			policy.Embedded = map[string]interface{}{
@@ -169,12 +118,12 @@ func listOktaSignonPoliciesIdentityEngine(ctx context.Context, client *okta.Clie
 			}
 			d.StreamListItem(ctx, policy)
 
-			// Check if the context is canceled or the row limit is reached
+			// Context can be cancelled due to manual cancellation or the limit has been hit
 			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
 	}
 
-	return nil, nil
+	return nil, err
 }
