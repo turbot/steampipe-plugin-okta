@@ -2,7 +2,6 @@ package okta
 
 import (
 	"context"
-	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -74,16 +73,14 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 
 	// paging
 	for resp.HasNextPage() {
-		// var nextPolicySet []*okta.Policy
-		nextToken := strings.Split(strings.Split(resp.NextPage, "after=")[0], "&")[0]
-		input.After = nextToken
-		policies, resp, err = client.Policy.ListPolicies(ctx, input)
+		var nextPolicySet []*okta.Policy
+		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
 			logger.Error("listOktaSignonPolicies", "list_policies_paging_error", err)
 			return nil, err
 		}
 		plugin.Logger(ctx).Error("Next page: ", resp.NextPage)
-		for _, policy := range policies {
+		for _, policy := range nextPolicySet {
 			d.StreamListItem(ctx, policy)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -118,7 +115,7 @@ func getOktaPolicyRules(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	if policyId == "" {
 		return nil, nil
 	}
-	
+
 	client, err := Connect(ctx, d)
 	if err != nil {
 		logger.Error("getOktaPolicyRules", "connect_error", err)
