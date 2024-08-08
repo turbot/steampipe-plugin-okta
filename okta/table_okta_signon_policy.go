@@ -2,6 +2,7 @@ package okta
 
 import (
 	"context"
+	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -34,7 +35,7 @@ func tableOktaSignonPolicy() *plugin.Table {
 
 			// JSON Columns
 			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
-			{Name: "rules", Type: proto.ColumnType_JSON, Transform: transform.FromField("Embedded.rules"), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
+			{Name: "rules", Type: proto.ColumnType_JSON, Hydrate: getOktaPolicyRules, Transform: transform.FromValue(), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
@@ -54,7 +55,6 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 
 	if d.Table.Name == "okta_signon_policy" {
 		input.Type = "OKTA_SIGN_ON"
-		input.Expand = "rules"
 	}
 
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
@@ -74,13 +74,16 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 
 	// paging
 	for resp.HasNextPage() {
-		var nextPolicySet []*okta.Policy
-		resp, err = resp.Next(ctx, &nextPolicySet)
+		// var nextPolicySet []*okta.Policy
+		nextToken := strings.Split(strings.Split(resp.NextPage, "after=")[0], "&")[0]
+		input.After = nextToken
+		policies, resp, err = client.Policy.ListPolicies(ctx, input)
 		if err != nil {
 			logger.Error("listOktaSignonPolicies", "list_policies_paging_error", err)
 			return nil, err
 		}
-		for _, policy := range nextPolicySet {
+		plugin.Logger(ctx).Error("Next page: ", resp.NextPage)
+		for _, policy := range policies {
 			d.StreamListItem(ctx, policy)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -91,4 +94,52 @@ func listOktaSignonPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.
 	}
 
 	return nil, err
+}
+
+//// HYDRATE FUNCTION
+
+func getOktaPolicyRules(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	if h.Item == nil {
+		return nil, nil
+	}
+	policyId := ""
+
+	switch item := h.Item.(type) {
+	case *PolicyStructure:
+		policyId = item.Id
+	case *okta.Policy:
+		policyId = item.Id
+	case *okta.AuthorizationServerPolicy:
+		policyId = item.Id
+	}
+
+	client, err := Connect(ctx, d)
+	if err != nil {
+		logger.Error("getOktaPolicyRules", "connect_error", err)
+		return nil, err
+	}
+
+	var rules []*okta.PolicyRule
+
+	policyRules, resp, err := client.Policy.ListPolicyRules(ctx, policyId)
+	if err != nil {
+		logger.Error("getOktaPolicyRules", "list_policies_error", err)
+		return nil, err
+	}
+
+	rules = append(rules, policyRules...)
+
+	// paging
+	for resp.HasNextPage() {
+		var nextPolicyRules []*okta.PolicyRule
+		resp, err = resp.Next(ctx, &nextPolicyRules)
+		if err != nil {
+			logger.Error("getOktaPolicyRules", "list_policies_paging_error", err)
+			return nil, err
+		}
+		rules = append(rules, nextPolicyRules...)
+	}
+
+	return rules, nil
 }
