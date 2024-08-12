@@ -179,7 +179,7 @@ func getOktaPolicyAssociatedResources(ctx context.Context, d *plugin.QueryData, 
 
 	policyMappings, resp, err := client.PolicyAPI.ListPolicyMappings(ctx, policyId).Execute()
 	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "not found") || strings.Contains(err.Error(), "404"){
+		if strings.Contains(strings.ToLower(err.Error()), "not found") || strings.Contains(err.Error(), "404") {
 			return nil, nil
 		}
 		logger.Error("getOktaPolicyAssociatedResources", "list_policies_error", err)
@@ -193,6 +193,9 @@ func getOktaPolicyAssociatedResources(ctx context.Context, d *plugin.QueryData, 
 		var nextPolicyMappings []*oktaV4.PolicyMapping
 		resp, err = resp.Next(&nextPolicyMappings)
 		if err != nil {
+			if strings.Contains(strings.ToLower(err.Error()), "not found") || strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
 			logger.Error("getOktaPolicyAssociatedResources", "list_policies_paging_error", err)
 			return nil, err
 		}
