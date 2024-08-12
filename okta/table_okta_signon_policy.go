@@ -179,7 +179,7 @@ func getOktaPolicyAssociatedResources(ctx context.Context, d *plugin.QueryData, 
 
 	policyMappings, resp, err := client.PolicyAPI.ListPolicyMappings(ctx, policyId).Execute()
 	if err != nil {
-		if strings.Contains(err.Error(), "Not Found") {
+		if strings.Contains(strings.ToLower(err.Error()), "not found") {
 			return nil, nil
 		}
 		logger.Error("getOktaPolicyAssociatedResources", "list_policies_error", err)
