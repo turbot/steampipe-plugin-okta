@@ -35,6 +35,7 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 			// JSON Columns
 			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
 			{Name: "rules", Type: proto.ColumnType_JSON, Hydrate: getOktaPolicyRules, Transform: transform.FromValue(), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
+			{Name: "resource_mapping", Type: proto.ColumnType_JSON, Hydrate: getOktaPolicyAssociatedResources, Transform: transform.FromValue(), Description: "The resources that are mapped to the Policy."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
