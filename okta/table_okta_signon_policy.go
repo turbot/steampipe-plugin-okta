@@ -2,9 +2,11 @@ package okta
 
 import (
 	"context"
+	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	oktaV4 "github.com/okta/okta-sdk-golang/v4/okta"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
@@ -35,6 +37,7 @@ func tableOktaSignonPolicy() *plugin.Table {
 			// JSON Columns
 			{Name: "conditions", Type: proto.ColumnType_JSON, Description: "Conditions for Policy."},
 			{Name: "rules", Type: proto.ColumnType_JSON, Hydrate: getOktaPolicyRules, Transform: transform.FromValue(), Description: "Each Policy may contain one or more Rules. Rules, like Policies, contain conditions that must be satisfied for the Rule to be applied."},
+			{Name: "resource_mapping", Type: proto.ColumnType_JSON, Hydrate: getOktaPolicyAssociatedResources, Transform: transform.FromValue(), Description: "The resources that are mapped to the Policy."},
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
@@ -143,4 +146,61 @@ func getOktaPolicyRules(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	}
 
 	return rules, nil
+}
+
+func getOktaPolicyAssociatedResources(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	if h.Item == nil {
+		return nil, nil
+	}
+	policyId := ""
+
+	switch item := h.Item.(type) {
+	case *PolicyStructure:
+		policyId = item.Id
+	case *okta.Policy:
+		policyId = item.Id
+	case *okta.AuthorizationServerPolicy:
+		policyId = item.Id
+	}
+
+	// Empty check
+	if policyId == "" {
+		return nil, nil
+	}
+
+	client, err := ConnectV4(ctx, d)
+	if err != nil {
+		logger.Error("getOktaPolicyAssociatedResources", "connect_error", err)
+		return nil, err
+	}
+
+	var mappings []oktaV4.PolicyMapping
+
+	policyMappings, resp, err := client.PolicyAPI.ListPolicyMappings(ctx, policyId).Execute()
+	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "not found") || strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		logger.Error("getOktaPolicyAssociatedResources", "list_policies_error", err)
+		return nil, err
+	}
+
+	mappings = append(mappings, policyMappings...)
+
+	// paging
+	for resp.HasNextPage() {
+		var nextPolicyMappings []*oktaV4.PolicyMapping
+		resp, err = resp.Next(&nextPolicyMappings)
+		if err != nil {
+			logger.Error("getOktaPolicyAssociatedResources", "list_policies_paging_error", err)
+			return nil, err
+		}
+
+		for _, mapping := range nextPolicyMappings {
+			mappings = append(mappings, *mapping)
+		}
+	}
+
+	return mappings, nil
 }
