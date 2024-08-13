@@ -47,7 +47,7 @@ order by
   priority;
 ```
 
-### List inactive sign on policies
+### List inactive sign-on policies
 Explore which authentication policies are inactive. This is useful for maintaining security by identifying potential gaps in your active policies.
 
 ```sql+postgres
@@ -78,7 +78,7 @@ where
   status = 'INACTIVE';
 ```
 
-### Get rules details for each sign on policy
+### Get rules details for each sign-on policy
 This query is useful to gain insights into each authentication policy's rules within your system. It provides a detailed view of the rules' names, systems, statuses, priorities, actions, and conditions, aiding in policy management and security assessment.
 
 ```sql+postgres
