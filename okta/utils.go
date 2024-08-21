@@ -2,6 +2,7 @@ package okta
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/ettle/strcase"
 	"github.com/turbot/go-kit/helpers"
@@ -47,4 +48,42 @@ func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap, filterKeys []str
 	}
 
 	return filters
+}
+
+// StructToMap converts the fields of a struct from interface{} to map[string]interface{}
+func structToMap(input interface{}) (map[string]interface{}, error) {
+	// Create the result map
+	if input == nil {
+		return nil, nil
+	}
+	result := make(map[string]interface{})
+
+	// Get the value and type of the input
+	value := reflect.ValueOf(input)
+	typ := reflect.TypeOf(input)
+
+	// Ensure the input is a struct or a pointer to a struct
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+		typ = typ.Elem()
+	}
+
+	if value.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("input must be a struct or a pointer to a struct")
+	}
+
+	// Iterate over struct fields
+	for i := 0; i < value.NumField(); i++ {
+		// Get field name and value
+		field := value.Field(i)
+		fieldType := typ.Field(i)
+		fieldName := fieldType.Name
+
+		// Only exportable fields (starting with an uppercase letter) can be accessed
+		if field.CanInterface() {
+			result[fieldName] = field.Interface()
+		}
+	}
+
+	return result, nil
 }
