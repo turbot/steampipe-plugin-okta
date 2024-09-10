@@ -2,6 +2,8 @@ package okta
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -38,10 +40,24 @@ func getOktaDomainNameCacheKey(ctx context.Context, d *plugin.QueryData, h *plug
 }
 
 func getOktaDomainNameUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Retrieve the Okta configuration
+	config := GetConfig(d.Connection)
 
-	cfg := GetConfig(d.Connection)
+	// Retrieve the domain from the config
+	domain := config.Domain
 
-	domainName := strings.Split(*cfg.Domain, "https://")[1]
+	// If the domain is not set in the config, fall back to the environment variable
+	if domain == nil {
+		envDomain := os.Getenv("OKTA_CLIENT_ORGURL")
+		domain = &envDomain
+	}
+
+	// Extract the domain name by removing the "https://" prefix
+	splitDomain := strings.SplitN(*domain, "https://", 2)
+	if len(splitDomain) != 2 {
+		return nil, fmt.Errorf("invalid okta domain format: %s", *domain)
+	}
+	domainName := splitDomain[1]
 
 	return domainName, nil
 }

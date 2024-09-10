@@ -12,14 +12,14 @@ import (
 
 //// TABLE DEFINITION
 
-func tableOktaIdpDiscoveryPolicy() *plugin.Table {
+func tableOktaAuthenticationPolicy() *plugin.Table {
 	return &plugin.Table{
-		Name:        "okta_idp_discovery_policy",
-		Description: "The IdP Discovery Policy determines where to route Users when they are attempting to sign in to your org. Users can be routed to a variety of Identity Providers (SAML2, IWA, AgentlessDSSO, X509, FACEBOOK, GOOGLE, LINKEDIN, MICROSOFT, OIDC) based on multiple conditions.",
+		Name:        "okta_authentication_policy",
+		Description: "Okta Authentication Policy controls the manner in which a user is authenticated, including MFA requirements.",
 		List: &plugin.ListConfig{
-			Hydrate: listOktaIdpDiscoveryPolicies,
+			Hydrate: listOktaAuthenticationPolicies,
 		},
-		Columns: commonColumns([]*plugin.Column{
+		Columns: []*plugin.Column{
 			// Top Columns
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the Policy."},
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Identifier of the Policy."},
@@ -39,28 +39,30 @@ func tableOktaIdpDiscoveryPolicy() *plugin.Table {
 
 			// Steampipe Columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
-		}),
+		},
 	}
 }
 
-func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
+//// LIST FUNCTION
+
+func listOktaAuthenticationPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
+	input := &query.Params{
+		Type: "ACCESS_POLICY",
+	}
+
 	client, err := Connect(ctx, d)
-
-	input := &query.Params{}
-
 	if err != nil {
-		logger.Error("listOktaIdpDiscoveryPolicies", "connect_error", err)
+		logger.Error("listOktaAuthenticationPolicies", "connect_error", err)
 		return nil, err
 	}
-	if d.Table.Name == "okta_idp_discovery_policy" {
-		input.Type = "IDP_DISCOVERY"
-	}
+
 	policies, resp, err := client.Policy.ListPolicies(ctx, input)
 	if err != nil {
-		logger.Error("listOktaIdpDiscoveryPolicies", "list_policies_error", err)
+		logger.Error("listOktaAuthenticationPolicies", "list_policies_error", err)
 		return nil, err
 	}
+
 	for _, policy := range policies {
 		d.StreamListItem(ctx, policy)
 
@@ -69,12 +71,13 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 			return nil, nil
 		}
 	}
+
 	// paging
 	for resp.HasNextPage() {
-		var nextPolicySet []*okta.AuthorizationServerPolicy
+		var nextPolicySet []*okta.Policy
 		resp, err = resp.Next(ctx, &nextPolicySet)
 		if err != nil {
-			logger.Error("listOktaIdpDiscoveryPolicies", "list_policies_paging_error", err)
+			logger.Error("listOktaAuthenticationPolicies", "list_policies_paging_error", err)
 			return nil, err
 		}
 		for _, policy := range nextPolicySet {
@@ -86,5 +89,6 @@ func listOktaIdpDiscoveryPolicies(ctx context.Context, d *plugin.QueryData, _ *p
 			}
 		}
 	}
+
 	return nil, err
 }
