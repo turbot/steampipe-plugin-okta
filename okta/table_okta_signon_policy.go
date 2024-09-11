@@ -118,15 +118,15 @@ func getOktaPolicyRules(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 		return nil, nil
 	}
 
-	client, err := Connect(ctx, d)
+	client, err := ConnectV4(ctx, d)
 	if err != nil {
 		logger.Error("getOktaPolicyRules", "connect_error", err)
 		return nil, err
 	}
 
-	var rules []*okta.PolicyRule
+	var rules []oktaV4.ListPolicyRules200ResponseInner
 
-	policyRules, resp, err := client.Policy.ListPolicyRules(ctx, policyId)
+	policyRules, resp, err := client.PolicyAPI.ListPolicyRules(ctx, policyId).Execute()
 	if err != nil {
 		logger.Error("getOktaPolicyRules", "list_policies_error", err)
 		return nil, err
@@ -136,16 +136,30 @@ func getOktaPolicyRules(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 
 	// paging
 	for resp.HasNextPage() {
-		var nextPolicyRules []*okta.PolicyRule
-		resp, err = resp.Next(ctx, &nextPolicyRules)
+		var nextPolicyRules []*oktaV4.ListPolicyRules200ResponseInner
+		resp, err = resp.Next(&nextPolicyRules)
 		if err != nil {
 			logger.Error("getOktaPolicyRules", "list_policies_paging_error", err)
 			return nil, err
 		}
-		rules = append(rules, nextPolicyRules...)
+		for _, r := range nextPolicyRules {
+			rules = append(rules, *r)
+		}
 	}
 
-	return rules, nil
+	var allRules []interface{}
+	for _, rule := range rules {
+		r := rule.GetActualInstance()
+		// We need to extract the inner properties; otherwise, the values will be populated as null.
+		result, err := structToMap(r)
+		if err != nil {
+			logger.Error("getOktaPolicyRules", "error in parsing the rules for the policy:", policyId, err)
+			return nil, err
+		}
+		allRules = append(allRules, result)
+	}
+
+	return allRules, nil
 }
 
 func getOktaPolicyAssociatedResources(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
