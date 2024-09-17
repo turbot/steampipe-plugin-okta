@@ -1,3 +1,19 @@
+## v0.13.0 [2024-09-18]
+
+_What's new?_
+
+- New tables added
+  - [okta_authentication_policy](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_authentication_policy) ([#139](https://github.com/turbot/steampipe-plugin-okta/pull/139))
+
+_Bug fixes_
+
+- Fixed the `rules` column in `okta_signon_policy`, `okta_password_policy`, `okta_idp_discovery_policy` and `okta_authentication_policy` tables to correctly return data instead of `null`. ([#145](https://github.com/turbot/steampipe-plugin-okta/pull/145))
+
+_Dependencies_
+
+- Recompiled plugin with Go version `1.22`. ([#146](https://github.com/turbot/steampipe-plugin-okta/pull/146))
+- Recompiled plugin with [steampipe-plugin-sdk v5.10.4](https://github.com/turbot/steampipe-plugin-sdk/blob/develop/CHANGELOG.md#v5104-2024-08-29) that fixes logging in the plugin export tool. ([#146](https://github.com/turbot/steampipe-plugin-okta/pull/146))
+
 ## v0.12.1 [2023-08-07]
 
 _Bug fixes_
