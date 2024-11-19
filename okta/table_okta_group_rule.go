@@ -2,8 +2,10 @@ package okta
 
 import (
 	"context"
+	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
@@ -43,18 +45,34 @@ func tableOktaGroupRule() *plugin.Table {
 
 func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("listOktaGroupRules")
-
 	client, err := Connect(ctx, d)
 	if err != nil {
 		logger.Error("listOktaGroupRules", "connection_error", err)
 		return nil, err
 	}
 
+	// Default maximum limit set as per documentation
+	// https://developer.okta.com/docs/reference/api/groups/#list-group-rules
+	input := query.Params{
+		Limit: 200,
+	}
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < input.Limit {
+			input.Limit = *limit
+		}
+	}
+
 	// Fetch group rules
-	groupRules, _, err := client.Group.ListGroupRules(ctx, nil)
+	groupRules, resp, err := client.Group.ListGroupRules(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaGroupRules", "list_error", err)
+		logger.Error("listOktaGroupRules", "list_group_rules_error", err)
+		if strings.Contains(err.Error(), "Not found") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -67,7 +85,25 @@ func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 		}
 	}
 
-	return nil, nil
+	// paging
+	for resp.HasNextPage() {
+		var nextGroupRuleSet []*okta.GroupRule
+		resp, err = resp.Next(ctx, &nextGroupRuleSet)
+		if err != nil {
+			logger.Error("listOktaGroupRules", "list_group_rules_paging_error", err)
+			return nil, err
+		}
+		for _, group_rule := range nextGroupRuleSet {
+			d.StreamListItem(ctx, group_rule)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
+		}
+	}
+
+	return nil, err
 }
 
 //// GET FUNCTION
@@ -97,7 +133,7 @@ func getOktaGroupRule(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	// Fetch the group rule by ID
 	groupRule, _, err := client.Group.GetGroupRule(ctx, ruleId, nil)
 	if err != nil {
-		logger.Error("getOktaGroupRule", "get_error", err)
+		logger.Error("getOktaGroupRule", "get_group_rule_error", err)
 		return nil, err
 	}
 
