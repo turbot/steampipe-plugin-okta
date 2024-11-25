@@ -69,7 +69,7 @@ where
   last_updated < strftime('%s', 'now') - 30*24*60*60;
 ```
 
-### List group rules with status 'ACTIVE'
+### List active group rules
 
 Retrieve group rules with the status 'ACTIVE' to identify active group rules and ensure that they are correctly configured. This is useful for managing access control and verifying the consistency of group rule assignments.
 
