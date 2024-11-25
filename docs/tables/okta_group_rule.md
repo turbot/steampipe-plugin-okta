@@ -14,7 +14,6 @@ The `okta_group_rule` table provides insights into group rules within Okta. As a
 ## Examples
 
 ### Basic info
-
 Explore the basic information about group rules in Okta to understand their purpose and configuration. This is useful for managing access controls and implementing security policies.
 
 ```sql+postgres
@@ -42,7 +41,6 @@ from
 ```
 
 ### List group rules without assignment changes for more than 30 days
-
 Determine the group rules that have not undergone assignment alterations in over a month. This could be useful for identifying inactive or stagnant group rules and assessing the need for assignment reviews or updates.
 
 ```sql+postgres
@@ -70,7 +68,6 @@ where
 ```
 
 ### List active group rules
-
 Retrieve group rules with the status 'ACTIVE' to identify active group rules and ensure that they are correctly configured. This is useful for managing access control and verifying the consistency of group rule assignments.
 
 ```sql+postgres
@@ -98,7 +95,6 @@ where
 ```
 
 ### List group rules with specific group membership actions
-
 This query retrieves Okta group rules, including the name, ID, status, and conditions, while filtering by specific group membership actions. This is useful for identifying group rules that assign users to specific groups.
 
 ```sql+postgres
