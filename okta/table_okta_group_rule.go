@@ -103,7 +103,7 @@ func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 	return nil, err
 }
 
-//// GET FUNCTION
+//// HYDRATE FUNCTION
 
 func getOktaGroupRule(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
