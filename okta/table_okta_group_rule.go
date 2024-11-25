@@ -2,7 +2,6 @@ package okta
 
 import (
 	"context"
-	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -22,6 +21,7 @@ func tableOktaGroupRule() *plugin.Table {
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaGroupRules,
+			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
 		},
 		Columns: commonColumns( []*plugin.Column{
 			// Basic columns
@@ -70,9 +70,6 @@ func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 	groupRules, resp, err := client.Group.ListGroupRules(ctx, &input)
 	if err != nil {
 		logger.Error("okta_group_rule.listOktaGroupRules", "api_error", err)
-		if strings.Contains(err.Error(), "Not found") {
-			return nil, nil
-		}
 		return nil, err
 	}
 
