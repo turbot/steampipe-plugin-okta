@@ -47,7 +47,7 @@ func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 	logger := plugin.Logger(ctx)
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("listOktaGroupRules", "connection_error", err)
+		logger.Error("okta_group_rule.listOktaGroupRules", "connection_error", err)
 		return nil, err
 	}
 
@@ -69,7 +69,7 @@ func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 	// Fetch group rules
 	groupRules, resp, err := client.Group.ListGroupRules(ctx, &input)
 	if err != nil {
-		logger.Error("listOktaGroupRules", "list_group_rules_error", err)
+		logger.Error("okta_group_rule.listOktaGroupRules", "api_error", err)
 		if strings.Contains(err.Error(), "Not found") {
 			return nil, nil
 		}
@@ -90,7 +90,7 @@ func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 		var nextGroupRuleSet []*okta.GroupRule
 		resp, err = resp.Next(ctx, &nextGroupRuleSet)
 		if err != nil {
-			logger.Error("listOktaGroupRules", "list_group_rules_paging_error", err)
+			logger.Error("okta_group_rule.listOktaGroupRules", "api_paging_error", err)
 			return nil, err
 		}
 		for _, group_rule := range nextGroupRuleSet {
@@ -110,7 +110,6 @@ func listOktaGroupRules(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 
 func getOktaGroupRule(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("getOktaGroupRule")
 
 	// Retrieve the rule ID from the query or hydrate data
 	var ruleId string
@@ -126,14 +125,14 @@ func getOktaGroupRule(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 
 	client, err := Connect(ctx, d)
 	if err != nil {
-		logger.Error("getOktaGroupRule", "connection_error", err)
+		logger.Error("okta_group_rule.getOktaGroupRule", "connection_error", err)
 		return nil, err
 	}
 
 	// Fetch the group rule by ID
 	groupRule, _, err := client.Group.GetGroupRule(ctx, ruleId, nil)
 	if err != nil {
-		logger.Error("getOktaGroupRule", "get_group_rule_error", err)
+		logger.Error("okta_group_rule.getOktaGroupRule", "api_error", err)
 		return nil, err
 	}
 
