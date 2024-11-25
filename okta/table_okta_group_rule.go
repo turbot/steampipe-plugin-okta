@@ -23,7 +23,7 @@ func tableOktaGroupRule() *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOktaGroupRules,
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns( []*plugin.Column{
 			// Basic columns
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique identifier of the group rule."},
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the group rule."},
@@ -37,7 +37,7 @@ func tableOktaGroupRule() *plugin.Table {
 
 			// Steampipe-specific
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: "Title of the group rule."},
-		},
+		}),
 	}
 }
 
