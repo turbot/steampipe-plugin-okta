@@ -71,6 +71,8 @@ where
 
 ### List group rules with status 'ACTIVE'
 
+Retrieve group rules with the status 'ACTIVE' to identify active group rules and ensure that they are correctly configured. This is useful for managing access control and verifying the consistency of group rule assignments.
+
 ```sql+postgres
 select
   name,
