@@ -183,25 +183,28 @@ func ConnectV5(ctx context.Context, d *plugin.QueryData) (*oktaV5.APIClient, err
 	return client, err
 }
 
-// Retrieve environment variables with default values
+// Retrieves an int64 value from an environment variable, with proper error handling
 func getEnvVarInt64(envVar string, defaultValue int64) (int64, error) {
-	if value := os.Getenv(envVar); value != "" {
-		if intValue, err := strconv.ParseInt(value, 10, 64); err == nil {
-			return intValue, nil
-		} else {
-			return 0, fmt.Errorf("error in converting environment value '%s' string type to int64: %v", envVar, err)
+	value := os.Getenv(envVar)
+	if value != "" {
+		intValue, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("failed to convert environment variable '%s' with value '%s' to int64: %v", envVar, value, err)
 		}
+		return intValue, nil
 	}
 	return defaultValue, nil
 }
 
+// Retrieves an int32 value from an environment variable, with proper error handling
 func getEnvVarInt32(envVar string, defaultValue int32) (int32, error) {
-	if value := os.Getenv(envVar); value != "" {
-		if intValue, err := strconv.ParseInt(value, 10, 32); err == nil {
-			return int32(intValue), nil
-		} else {
-			return 0, fmt.Errorf("error in converting environment value '%s' string type to int32: %v", envVar, err)
+	value := os.Getenv(envVar)
+	if value != "" {
+		intValue, err := strconv.ParseInt(value, 10, 32)
+		if err != nil {
+			return 0, fmt.Errorf("failed to convert environment variable '%s' with value '%s' to int32: %v", envVar, value, err)
 		}
+		return int32(intValue), nil
 	}
 	return defaultValue, nil
 }
@@ -213,8 +216,17 @@ func getOktaConfigValues(d *plugin.QueryData) (domain, token, clientID, privateK
 	// The default value has been set as per the API doc: https://github.com/okta/okta-sdk-golang?tab=readme-ov-file#environment-variables
 	// SDK supported environment variables: https://github.com/okta/okta-sdk-golang/blob/master/okta/config.go#L33-L70
 	requestTimeout, err = getEnvVarInt64("OKTA_CLIENT_REQUEST_TIMEOUT", 30)
+	if err != nil {
+		return "", "", "", "", 0, 0, 0, err
+	}
 	maxBackoff, err = getEnvVarInt64("OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF", 30)
+	if err != nil {
+		return "", "", "", "", 0, 0, 0, err
+	}
 	maxRetries, err = getEnvVarInt32("OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES", 5)
+	if err != nil {
+		return "", "", "", "", 0, 0, 0, err
+	}
 
 	if oktaConfig.MaxBackoff != nil {
 		maxBackoff = *oktaConfig.MaxBackoff
