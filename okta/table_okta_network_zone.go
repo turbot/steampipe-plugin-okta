@@ -3,8 +3,7 @@ package okta
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
@@ -53,58 +52,65 @@ func tableOktaNetworkZone() *plugin.Table {
 
 func listOktaNetworkZones(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	client, err := Connect(ctx, d)
+
+	client, err := ConnectV5(ctx, d)
 	if err != nil {
 		logger.Error("listOktaNetworkZones", "connect_error", err)
 		return nil, err
 	}
 
-	// Maximum limit isn't mentioned in the documentation
-	// Default maximum limit is set as 200
-	input := query.Params{
-		Limit: 200,
-	}
-
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
-	limit := d.QueryContext.Limit
+	limit := int64(200)
 	if d.QueryContext.Limit != nil {
-		if *limit < input.Limit {
-			input.Limit = *limit
+		if *d.QueryContext.Limit < limit {
+			limit = *d.QueryContext.Limit
 		}
 	}
 
-	networkZones, resp, err := client.NetworkZone.ListNetworkZones(ctx, &input)
+	// Request
+	zoneReq := client.NetworkZoneAPI.ListNetworkZones(ctx)
+
+	zones, resp, err := zoneReq.Limit(int32(limit)).Execute()
 	if err != nil {
-		logger.Error("listOktaNetworkZones", "list_network_zones_error", err)
+		logger.Error("okta_factor.listOktaNetworkZones", "api_error", err)
 		return nil, err
 	}
 
-	for _, networkZone := range networkZones {
-		d.StreamListItem(ctx, networkZone)
-
-		// Context can be cancelled due to manual cancellation or the limit has been hit
-		if d.RowsRemaining(ctx) == 0 {
-			return nil, nil
-		}
-	}
-
-	// paging
-	for resp.HasNextPage() {
-		var nextZoneSet []*okta.NetworkZone
-		resp, err = resp.Next(ctx, &nextZoneSet)
-		if err != nil {
-			logger.Error("listOktaNetworkZones", "list_network_zones_paging_error", err)
-			return nil, err
-		}
-		for _, networkZone := range nextZoneSet {
-			d.StreamListItem(ctx, networkZone)
+	for _, zone := range zones {
+		z := processNetworkZones(zone)
+		if z != nil {
+			d.StreamListItem(ctx, z)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
 			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
+	}
+
+	// paging
+	for resp.HasNextPage() {
+		var nextZoneSet []okta.ListNetworkZones200ResponseInner
+
+		resp, err = resp.Next(&nextZoneSet)
+		if err != nil {
+			logger.Error("listOktaNetworkZones", "list_network_zones_paging_error", err)
+			return nil, err
+		}
+
+		for _, zone := range nextZoneSet {
+			z := processNetworkZones(zone)
+			if z != nil {
+				d.StreamListItem(ctx, z)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.RowsRemaining(ctx) == 0 {
+					return nil, nil
+				}
+			}
+		}
+
 	}
 
 	return nil, err
@@ -114,7 +120,7 @@ func listOktaNetworkZones(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 
 func getOktaNetworkZone(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	client, err := Connect(ctx, d)
+	client, err := ConnectV5(ctx, d)
 
 	id := d.EqualsQuals["id"].GetStringValue()
 	if id == "" {
@@ -125,11 +131,30 @@ func getOktaNetworkZone(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydr
 		return nil, err
 	}
 
-	networkZone, _, err := client.NetworkZone.GetNetworkZone(ctx, id)
+	networkZone, _, err := client.NetworkZoneAPI.GetNetworkZone(ctx, id).Execute()
 	if err != nil {
 		logger.Error("getOktaNetworkZone", "get_network_zone_error", err)
 		return nil, err
 	}
 
-	return networkZone, err
+	if networkZone != nil {
+		return processNetworkZones(*networkZone), nil
+	}
+
+	return nil, nil
+}
+
+// Helper function to process and stream network zones
+func processNetworkZones(networkZone okta.ListNetworkZones200ResponseInner) interface{} {
+	if networkZone.DynamicNetworkZone != nil {
+		return networkZone.DynamicNetworkZone
+	}
+	if networkZone.EnhancedDynamicNetworkZone != nil {
+		return networkZone.EnhancedDynamicNetworkZone
+	}
+	if networkZone.IPNetworkZone != nil {
+		return networkZone.IPNetworkZone
+	}
+
+	return nil
 }
