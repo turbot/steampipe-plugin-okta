@@ -8,6 +8,7 @@ require (
 	github.com/ettle/strcase v0.1.1
 	github.com/okta/okta-sdk-golang/v2 v2.5.0
 	github.com/okta/okta-sdk-golang/v4 v4.0.0
+	github.com/okta/okta-sdk-golang/v5 v5.0.4
 	github.com/turbot/go-kit v0.10.0-rc.0
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.10.4
 )
@@ -82,7 +83,6 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/run v1.0.0 // indirect
-	github.com/okta/okta-sdk-golang/v5 v5.0.4 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
