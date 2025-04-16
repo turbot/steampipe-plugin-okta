@@ -2,11 +2,11 @@ package okta
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	oktav4 "github.com/okta/okta-sdk-golang/v4/okta"
-	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/go-kit/types"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
@@ -93,7 +93,7 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 				return nil, nil
 			}
 		} else if len(getListValues(d.EqualsQuals["user_id"].GetListValue())) > 0 {
-			if !helpers.StringSliceContains(types.StringValueSlice(getListValues(d.EqualsQuals["user_id"].GetListValue())), userId) {
+			if !slices.Contains(types.StringValueSlice(getListValues(d.EqualsQuals["user_id"].GetListValue())), userId) {
 				return nil, nil
 			}
 		}

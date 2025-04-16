@@ -2,11 +2,11 @@ package okta
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/go-kit/types"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
@@ -78,7 +78,7 @@ func listApplicationAssignedGroups(ctx context.Context, d *plugin.QueryData, h *
 				return nil, nil
 			}
 		} else if len(getListValues(equalQuals["app_id"].GetListValue())) > 0 {
-			if !helpers.StringSliceContains(types.StringValueSlice(getListValues(equalQuals["app_id"].GetListValue())), appId) {
+			if !slices.Contains(types.StringValueSlice(getListValues(equalQuals["app_id"].GetListValue())), appId) {
 				return nil, nil
 			}
 		}
