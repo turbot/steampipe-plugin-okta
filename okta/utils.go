@@ -3,9 +3,9 @@ package okta
 import (
 	"fmt"
 	"reflect"
+	"slices"
 
 	"github.com/ettle/strcase"
-	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/go-kit/types"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -42,7 +42,7 @@ func buildQueryFilter(equalQuals plugin.KeyColumnEqualsQualMap, filterKeys []str
 	filters := []string{}
 
 	for k, v := range equalQuals {
-		if v != nil && helpers.StringSliceContains(filterKeys, k) {
+		if v != nil && slices.Contains(filterKeys, k) {
 			filters = append(filters, fmt.Sprintf("%s eq \"%s\"", strcase.ToCamel(k), v.GetStringValue()))
 		}
 	}
