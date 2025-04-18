@@ -1,4 +1,8 @@
-## v1.1.0 [2025-04-17]
+## v1.1.0 [2025-04-18]
+
+- New tables added
+  - [okta_group_owner](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_group_owner) ([#133](https://github.com/turbot/steampipe-plugin-okta/pull/133))
+  - [okta_group_rule](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_group_rule) ([#150](https://github.com/turbot/steampipe-plugin-okta/pull/150))
 
 _Dependencies_
 
