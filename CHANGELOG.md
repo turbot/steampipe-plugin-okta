@@ -1,3 +1,14 @@
+## v1.1.0 [2025-04-18]
+
+- New tables added
+  - [okta_group_owner](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_group_owner) ([#133](https://github.com/turbot/steampipe-plugin-okta/pull/133))
+  - [okta_group_rule](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_group_rule) ([#150](https://github.com/turbot/steampipe-plugin-okta/pull/150))
+
+_Dependencies_
+
+- Recompiled plugin with Go version `1.23.1`. ([#167](https://github.com/turbot/steampipe-plugin-okta/pull/167))
+- Recompiled plugin with [steampipe-plugin-sdk v5.11.5](https://github.com/turbot/steampipe-plugin-sdk/blob/v5.11.5/CHANGELOG.md#v5115-2025-03-31) that addresses critical and high vulnerabilities in dependent packages. ([#167](https://github.com/turbot/steampipe-plugin-okta/pull/167))
+
 ## v1.0.0 [2024-10-22]
 
 There are no significant changes in this plugin version; it has been released to align with [Steampipe's v1.0.0](https://steampipe.io/changelog/steampipe-cli-v1-0-0) release. This plugin adheres to [semantic versioning](https://semver.org/#semantic-versioning-specification-semver), ensuring backward compatibility within each major version.
