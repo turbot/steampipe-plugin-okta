@@ -55,7 +55,7 @@ func listOktaNetworkZones(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 
 	client, err := ConnectV5(ctx, d)
 	if err != nil {
-		logger.Error("listOktaNetworkZones", "connect_error", err)
+		logger.Error("okta_network_zone.listOktaNetworkZones", "connect_error", err)
 		return nil, err
 	}
 
@@ -73,7 +73,7 @@ func listOktaNetworkZones(ctx context.Context, d *plugin.QueryData, _ *plugin.Hy
 
 	zones, resp, err := zoneReq.Limit(int32(limit)).Execute()
 	if err != nil {
-		logger.Error("okta_factor.listOktaNetworkZones", "api_error", err)
+		logger.Error("okta_network_zone.listOktaNetworkZones", "api_error", err)
 		return nil, err
 	}
 
