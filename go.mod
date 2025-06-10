@@ -10,7 +10,7 @@ require (
 	github.com/okta/okta-sdk-golang/v4 v4.0.0
 	github.com/okta/okta-sdk-golang/v5 v5.0.4
 	github.com/turbot/go-kit v1.1.0
-	github.com/turbot/steampipe-plugin-sdk/v5 v5.11.6
+	github.com/turbot/steampipe-plugin-sdk/v5 v5.11.7
 )
 
 require (
