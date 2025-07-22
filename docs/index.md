@@ -107,6 +107,7 @@ If using the Okta service application, the following scopes must be enabled for 
 - okta.users.read
 - okta.groups.read
 - okta.apps.read
+- okta.devices.read
 - okta.roles.read
 - okta.policies.read
 - okta.authorizationServers.read
