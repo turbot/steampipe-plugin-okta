@@ -113,6 +113,7 @@ If using the Okta service application, the following scopes must be enabled for 
 - okta.authorizationServers.read
 - okta.trustedOrigins.read
 - okta.factors.read
+- okta.authenticators.read
 
 **Note:** Table `okta_user_type` and `okta_network_zone` doesn't work in Service App authentication mode.
 
