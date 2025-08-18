@@ -2,7 +2,6 @@ package okta
 
 import (
 	"context"
-	"strings"
 
 	oktaV5 "github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -35,12 +34,12 @@ func tableOktaAuthenticator() *plugin.Table {
 			{Name: "key", Type: proto.ColumnType_STRING, Description: "Key for the authenticator (e.g., okta_email, okta_password, phone_number)."},
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "Lifecycle status of the authenticator (ACTIVE or INACTIVE)."},
 			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the authenticator was created."},
-			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the authenticator was last updated.", Transform: transform.FromField("LastUpdated")},
+			{Name: "last_updated", Type: proto.ColumnType_TIMESTAMP, Description: "Timestamp when the authenticator was last updated."},
 
 			// JSON columns
 			{Name: "settings", Type: proto.ColumnType_JSON, Description: "Settings for the authenticator."},
 			{Name: "provider", Type: proto.ColumnType_JSON, Description: "Provider configuration for app-type authenticators."},
-			{Name: "links", Type: proto.ColumnType_JSON, Description: "HAL links related to the authenticator.", Transform: transform.FromField("Links")},
+			{Name: "links", Type: proto.ColumnType_JSON, Description: "HAL links related to the authenticator."},
 
 			// Steampipe standard columns
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: titleDescription},
@@ -62,9 +61,6 @@ func listOktaAuthenticators(ctx context.Context, d *plugin.QueryData, _ *plugin.
 	authenticators, resp, err := req.Execute()
 	if err != nil {
 		logger.Error("okta_authenticator.listOktaAuthenticators", "api_error", err)
-		if strings.Contains(err.Error(), "Not found") {
-			return nil, nil
-		}
 		return nil, err
 	}
 
@@ -88,6 +84,7 @@ func listOktaAuthenticators(ctx context.Context, d *plugin.QueryData, _ *plugin.
 		for _, item := range nextSet {
 			if v := item.GetActualInstance(); v != nil {
 				d.StreamListItem(ctx, v)
+				// Context can be cancelled due to manual cancellation or the limit has been hit
 				if d.RowsRemaining(ctx) == 0 {
 					return nil, nil
 				}
