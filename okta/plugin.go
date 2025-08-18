@@ -29,6 +29,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"okta_application":           tableOktaApplication(),
 			"okta_auth_server":           tableOktaAuthServer(),
 			"okta_authentication_policy": tableOktaAuthenticationPolicy(),
+			"okta_authenticator":         tableOktaAuthenticator(),
 			"okta_device":                tableOktaDevice(),
 			"okta_factor":                tableOktaFactor(),
 			"okta_group":                 tableOktaGroup(),
