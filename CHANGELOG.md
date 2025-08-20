@@ -1,3 +1,19 @@
+## v1.2.0 [2025-08-21]
+
+_What's new?_
+
+- New tables added
+  - [okta_authenticator](https://hub.steampipe.io/plugins/turbot/okta/tables/okta_authenticator) ([#182](https://github.com/turbot/steampipe-plugin-okta/pull/182)) (Thanks [@ameyer117](https://github.com/ameyer117) for the contribution!!)
+
+_Bug fixes_
+
+- Fixed the `okta_network_zone` table to correctly return data instead of an error. ([#160](https://github.com/turbot/steampipe-plugin-okta/pull/160))
+
+_Dependencies_
+
+- Recompiled plugin with Go version `1.24`.
+- Recompiled plugin with [steampipe-plugin-sdk v5.13.0](https://github.com/turbot/steampipe-plugin-sdk/blob/develop/CHANGELOG.md#v5130-2025-07-21) that addresses critical and high vulnerabilities in dependent packages.
+
 ## v1.1.0 [2025-04-18]
 
 - New tables added
