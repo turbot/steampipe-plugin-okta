@@ -12,6 +12,7 @@ type oktaConfig struct {
 	RequestTimeout *int64  `hcl:"request_timeout"`
 	MaxRetries     *int32  `hcl:"max_retries"`
 	MaxBackoff     *int64  `hcl:"max_backoff"`
+	IsFullAdmin    *bool   `hcl:"is_full_admin"`
 }
 
 func ConfigInstance() interface{} {

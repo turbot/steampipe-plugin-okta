@@ -55,7 +55,7 @@ steampipe plugin install okta
 ### Credentials
 
 | Item        | Description                                                                                                                                                                                                                                                                                 |
-|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Credentials | Okta requires a domain and an [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) or [a service app and private key](https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/overview/) for all requests.                          |
 | Permissions | API tokens have the same permissions as the user who creates them, and if the user permissions change, the API token permissions also change. Service application permissions are based on granted [OAuth scopes](https://developer.okta.com/docs/guides/implement-oauth-for-okta/scopes/). |
 | Radius      | Each connection represents a single Okta Organization.                                                                                                                                                                                                                                      |
@@ -86,6 +86,9 @@ connection "okta" {
   # Private key value. Can also be set with the OKTA_CLIENT_PRIVATEKEY environment variable.
   # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 
+  # Whether the token has full admin privileges. When set to true, the assigned_roles column in the okta_user table will be populated. When false, it returns empty. Can also be set with the OKTA_IS_FULL_ADMIN environment variable. Defaults to false.
+  # is_full_admin = false
+
   # The maximum number of attempts (including the initial call) Steampipe will
   # make for failing API calls. Can also be set with the OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES environment variable.
   # Defaults to 5 and must be greater than or equal to 1.
@@ -104,6 +107,7 @@ connection "okta" {
 By default, all options are commented out in the default connection, thus Steampipe will resolve your credentials using the same order as mentioned in [Credentials](#credentials). This provides a quick way to get started with Steampipe, but you will probably want to customize your experience using configuration options for querying multiple organizations, configuring credentials from your okta configuration files, [environment variables](#credentials-from-environment-variables), etc.
 
 If using the Okta service application, the following scopes must be enabled for Steampipe to be able to access the Okta APIs:
+
 - okta.users.read
 - okta.groups.read
 - okta.apps.read
@@ -145,4 +149,9 @@ export OKTA_CLIENT_RATE_LIMIT_MAX_BACKOFF=40
 export OKTA_CLIENT_ORGURL=https://<your_okta_domain>.okta.com
 export OKTA_CLIENT_CLIENTID=0oa10zpa2bo6tAm9Test
 export OKTA_CLIENT_PRIVATEKEY="-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
+```
+
+**Note:** Querying user admin roles requires a token with full admin privileges in Okta. If `is_full_admin` is not set or set to `false`, the `assigned_roles` column in the `okta_user` will return an empty list. This can also be managed using the `OKTA_IS_FULL_ADMIN` environment variable:
+```sh
+export OKTA_IS_FULL_ADMIN=true
 ```

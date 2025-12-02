@@ -41,11 +41,11 @@ func tableOktaUser() *plugin.Table {
 		},
 		HydrateConfig: []plugin.HydrateConfig{
 			{
-				Func: listUserGroups,
+				Func:           listUserGroups,
 				MaxConcurrency: 10,
 			},
 			{
-				Func: listAssignedRolesForUser,
+				Func:           listAssignedRolesForUser,
 				MaxConcurrency: 10,
 			},
 		},
@@ -231,6 +231,20 @@ func listUserGroups(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 func listAssignedRolesForUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("listAssignedRolesForUser")
+
+	// Check if is_full_admin is enabled
+	oktaConfig := GetConfig(d.Connection)
+	isFullAdmin, err := getBoolValue(oktaConfig.IsFullAdmin, "OKTA_IS_FULL_ADMIN", false)
+	if err != nil {
+		logger.Error("listAssignedRolesForUser", "config_error", err)
+		return nil, err
+	}
+
+	// If not full admin, return nil
+	if !isFullAdmin {
+		return nil, nil
+	}
+
 	user := h.Item.(*okta.User)
 	client, err := Connect(ctx, d)
 	if err != nil {

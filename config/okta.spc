@@ -18,6 +18,12 @@ connection "okta" {
   # Private key value. Can also be set with the OKTA_CLIENT_PRIVATEKEY environment variable.
   # private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK..."
 
+  # Whether the token has full admin privileges. When set to true, the assigned_roles column 
+  # in the okta_user table will be populated. When false, it returns empty.
+  # Can also be set with the OKTA_IS_FULL_ADMIN environment variable.
+  # Defaults to false.
+  # is_full_admin = false
+
   # The maximum number of attempts (including the initial call) Steampipe will
   # make for failing API calls. Can also be set with the OKTA_CLIENT_RATE_LIMIT_MAX_RETRIES environment variable.
   # Defaults to 5 and must be greater than or equal to 1.

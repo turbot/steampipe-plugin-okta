@@ -209,6 +209,19 @@ func getEnvVarInt32(envVar string, defaultValue int32) (int32, error) {
 	return defaultValue, nil
 }
 
+// Retrieves a bool value from an environment variable, with proper error handling
+func getEnvVarBool(envVar string, defaultValue bool) (bool, error) {
+	value := os.Getenv(envVar)
+	if value != "" {
+		boolValue, err := strconv.ParseBool(value)
+		if err != nil {
+			return false, fmt.Errorf("failed to convert environment variable '%s' with value '%s' to bool: %v", envVar, value, err)
+		}
+		return boolValue, nil
+	}
+	return defaultValue, nil
+}
+
 // Retrieve Okta configuration values
 func getOktaConfigValues(d *plugin.QueryData) (domain, token, clientID, privateKey string, requestTimeout, maxBackoff int64, maxRetries int32, err error) {
 	oktaConfig := GetConfig(d.Connection)
@@ -251,4 +264,11 @@ func getStringValue(configValue *string, envVar string) string {
 		return *configValue
 	}
 	return os.Getenv(envVar)
+}
+
+func getBoolValue(configValue *bool, envVar string, defaultValue bool) (bool, error) {
+	if configValue != nil {
+		return *configValue, nil
+	}
+	return getEnvVarBool(envVar, defaultValue)
 }
