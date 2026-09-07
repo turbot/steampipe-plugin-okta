@@ -3,7 +3,7 @@ module github.com/turbot/steampipe-plugin-okta
 go 1.26.0
 
 require (
-	github.com/ettle/strcase v0.1.1
+	github.com/ettle/strcase v0.2.0
 	github.com/okta/okta-sdk-golang/v2 v2.5.0
 	github.com/okta/okta-sdk-golang/v4 v4.0.0
 	github.com/okta/okta-sdk-golang/v5 v5.0.4
