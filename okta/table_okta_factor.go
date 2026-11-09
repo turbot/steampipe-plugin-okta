@@ -183,90 +183,34 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	userProfile := *user.Profile
 	userName := userProfile.Login
 
-	factorReq := client.UserFactorAPI.GetFactor(ctx, userId, factorId)
-	result, _, err := factorReq.Execute()
+	// See listOktaFactors: decode the raw response so that factor types unknown to
+	// the v4 SDK (e.g. "signed_nonce") are not dropped.
+	v2Client, err := Connect(ctx, d)
 	if err != nil {
+		logger.Error("okta_factor.getOktaFactor", "connection_error", err)
+		return nil, err
+	}
+	executor := v2Client.GetRequestExecutor().WithAccept("application/json").WithContentType("application/json")
+	req, err := executor.NewRequest("GET", fmt.Sprintf("/api/v1/users/%s/factors/%s", userId, factorId), nil)
+	if err != nil {
+		logger.Error("okta_factor.getOktaFactor", "request_error", err)
+		return nil, err
+	}
+	var raw json.RawMessage
+	if _, err := executor.Do(ctx, req, &raw); err != nil {
 		logger.Error("okta_factor.getOktaFactor", "api_error", err)
 		return nil, err
 	}
-
-	if result.GetActualInstance() == nil {
-		return nil, nil
+	f, err := parseFactor(raw)
+	if err != nil {
+		logger.Error("okta_factor.getOktaFactor", "parse_error", err)
+		return nil, err
 	}
-	f := getFactorDetails(result.GetActualInstance())
 
 	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: f}, nil
 }
 
 //// UTILITY FUNCTION
-
-func getFactorDetails(i interface{}) OktaFactor {
-	f := OktaFactor{}
-
-	switch item := i.(type) {
-	case *oktav4.UserFactorCall:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorCustomHOTP:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorEmail:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorHardware:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorPush:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorSMS:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorSecurityQuestion:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorTOTP:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorToken:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorU2F:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorWeb:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorWebAuthn:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	}
-	return f
-}
 
 // parseFactor decodes a factor from its raw API representation, keeping the
 // common fields and the type-specific profile for any factor type.
