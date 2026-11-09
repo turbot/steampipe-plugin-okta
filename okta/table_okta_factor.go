@@ -2,6 +2,8 @@ package okta
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -71,7 +73,7 @@ type OktaFactor struct {
 
 func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	client, err := ConnectV4(ctx, d)
+	client, err := Connect(ctx, d)
 	if err != nil {
 		logger.Error("okta_factor.listOktaFactors", "connect_error", err)
 		return nil, err
@@ -103,9 +105,18 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		return nil, nil
 	}
 
-	factorReq := client.UserFactorAPI.ListFactors(ctx, userId)
+	// The v4 SDK decodes factors into a oneOf union that silently yields an empty
+	// value for factor types it doesn't model (e.g. "signed_nonce", Okta Verify
+	// with FastPass), so decode the raw response to avoid dropping them.
+	executor := client.GetRequestExecutor().WithAccept("application/json").WithContentType("application/json")
+	req, err := executor.NewRequest("GET", fmt.Sprintf("/api/v1/users/%s/factors", userId), nil)
+	if err != nil {
+		logger.Error("okta_factor.listOktaFactors", "request_error", err)
+		return nil, err
+	}
 
-	factors, resp, err := factorReq.Execute()
+	var factors []json.RawMessage
+	resp, err := executor.Do(ctx, req, &factors)
 	if err != nil {
 		logger.Error("okta_factor.listOktaFactors", "api_error", err)
 		if strings.Contains(err.Error(), "Not found") {
@@ -114,49 +125,32 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		return nil, err
 	}
 
-	for _, factor := range factors {
-		if factor.GetActualInstance() != nil {
-			factorDetails := getFactorDetails(factor.GetActualInstance())
-			d.StreamListItem(ctx, UserFactorInfo{
-				UserId:   userId,
-				UserName: userName,
-				Factor:   factorDetails,
-			})
+	for {
+		for _, raw := range factors {
+			factor, err := parseFactor(raw)
+			if err != nil {
+				logger.Error("okta_factor.listOktaFactors", "parse_error", err)
+				return nil, err
+			}
+			d.StreamListItem(ctx, UserFactorInfo{UserId: userId, UserName: userName, Factor: factor})
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
 			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
-	}
 
-	// paging
-	for resp.HasNextPage() {
-		var nextFactorSet []oktav4.ListFactors200ResponseInner
-		resp, err = resp.Next(&nextFactorSet)
-		if err != nil {
+		// paging
+		if !resp.HasNextPage() {
+			return nil, nil
+		}
+		var next []json.RawMessage
+		if resp, err = resp.Next(ctx, &next); err != nil {
 			logger.Error("okta_factor.listOktaFactors", "api_paging_error", err)
 			return nil, err
 		}
-
-		for _, factor := range nextFactorSet {
-			if factor.GetActualInstance() != nil {
-				f := getFactorDetails(factor.GetActualInstance())
-				d.StreamListItem(ctx, UserFactorInfo{
-					UserId:   userId,
-					UserName: userName,
-					Factor:   f,
-				})
-
-				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.RowsRemaining(ctx) == 0 {
-					return nil, nil
-				}
-			}
-		}
+		factors = next
 	}
-
-	return nil, err
 }
 
 //// HYDRATE FUNCTIONS
@@ -272,4 +266,20 @@ func getFactorDetails(i interface{}) OktaFactor {
 		}
 	}
 	return f
+}
+
+// parseFactor decodes a factor from its raw API representation, keeping the
+// common fields and the type-specific profile for any factor type.
+func parseFactor(raw []byte) (OktaFactor, error) {
+	var base oktav4.UserFactor
+	if err := json.Unmarshal(raw, &base); err != nil {
+		return OktaFactor{}, err
+	}
+	var extra struct {
+		Profile interface{} `json:"profile"`
+	}
+	if err := json.Unmarshal(raw, &extra); err != nil {
+		return OktaFactor{}, err
+	}
+	return OktaFactor{UserFactor: base, Profile: extra.Profile}, nil
 }
