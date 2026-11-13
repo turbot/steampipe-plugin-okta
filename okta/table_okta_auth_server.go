@@ -6,10 +6,10 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 //// TABLE DEFINITION
@@ -19,9 +19,9 @@ func tableOktaAuthServer() *plugin.Table {
 		Name:        "okta_auth_server",
 		Description: "Represents an Okta Authorization Server.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getOktaAuthServer,
-			KeyColumns:        plugin.SingleColumn("id"),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      getOktaAuthServer,
+			KeyColumns:   plugin.SingleColumn("id"),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaAuthServers,

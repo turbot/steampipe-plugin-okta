@@ -8,10 +8,10 @@ import (
 	"github.com/ettle/strcase"
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 //// TABLE DEFINITION
@@ -21,9 +21,9 @@ func tableOktaUser() *plugin.Table {
 		Name:        "okta_user",
 		Description: "Represents an Okta user account.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getOktaUser,
-			KeyColumns:        plugin.SingleColumn("id"),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      getOktaUser,
+			KeyColumns:   plugin.SingleColumn("id"),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaUsers,
@@ -41,11 +41,11 @@ func tableOktaUser() *plugin.Table {
 		},
 		HydrateConfig: []plugin.HydrateConfig{
 			{
-				Func: listUserGroups,
+				Func:           listUserGroups,
 				MaxConcurrency: 10,
 			},
 			{
-				Func: listAssignedRolesForUser,
+				Func:           listAssignedRolesForUser,
 				MaxConcurrency: 10,
 			},
 		},

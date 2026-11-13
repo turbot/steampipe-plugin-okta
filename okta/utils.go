@@ -7,8 +7,8 @@ import (
 
 	"github.com/ettle/strcase"
 	"github.com/turbot/go-kit/types"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 const (
@@ -63,7 +63,7 @@ func structToMap(input interface{}) (map[string]interface{}, error) {
 	typ := reflect.TypeOf(input)
 
 	// Ensure the input is a struct or a pointer to a struct
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Pointer {
 		value = value.Elem()
 		typ = typ.Elem()
 	}

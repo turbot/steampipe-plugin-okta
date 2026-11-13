@@ -5,10 +5,10 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 //// TABLE DEFINITION
@@ -18,9 +18,9 @@ func tableOktaApplicationAssignedUser() *plugin.Table {
 		Name:        "okta_app_assigned_user",
 		Description: "Represents all assigned users for applications.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getApplicationAssignedUser,
-			KeyColumns:        plugin.AllColumns([]string{"id", "app_id"}),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      getApplicationAssignedUser,
+			KeyColumns:   plugin.AllColumns([]string{"id", "app_id"}),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
 		List: &plugin.ListConfig{
 			ParentHydrate: getOrListOktaApplications,

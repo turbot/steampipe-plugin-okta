@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/okta/okta-sdk-golang/v4/okta"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 //// TABLE DEFINITION
@@ -17,9 +17,9 @@ func tableOktaDevice() *plugin.Table {
 		Name:        "okta_device",
 		Description: "Okta’s device management is a crucial part of its broader suite of identity and access management solutions, helping organizations to secure their IT environments in an increasingly mobile and cloud-centric world.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getOktaDevice,
-			KeyColumns:        plugin.SingleColumn("id"),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      getOktaDevice,
+			KeyColumns:   plugin.SingleColumn("id"),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaDevices,
