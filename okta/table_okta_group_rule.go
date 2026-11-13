@@ -5,9 +5,9 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 )
 
 func tableOktaGroupRule() *plugin.Table {
@@ -15,15 +15,15 @@ func tableOktaGroupRule() *plugin.Table {
 		Name:        "okta_group_rule",
 		Description: "Retrieve group rules for Okta. Group rules define conditions and actions for automating group membership.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getOktaGroupRule,
-			KeyColumns:        plugin.SingleColumn("id"),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      getOktaGroupRule,
+			KeyColumns:   plugin.SingleColumn("id"),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
 		List: &plugin.ListConfig{
-			Hydrate: listOktaGroupRules,
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      listOktaGroupRules,
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
-		Columns: commonColumns( []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Basic columns
 			{Name: "id", Type: proto.ColumnType_STRING, Description: "Unique identifier of the group rule."},
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the group rule."},

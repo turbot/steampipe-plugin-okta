@@ -8,10 +8,10 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	oktav4 "github.com/okta/okta-sdk-golang/v4/okta"
 	"github.com/turbot/go-kit/types"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 //// TABLE DEFINITION
@@ -21,9 +21,9 @@ func tableOktaFactor() *plugin.Table {
 		Name:        "okta_factor",
 		Description: "Represents an Okta Factor.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getOktaFactor,
-			KeyColumns:        plugin.AllColumns([]string{"id", "user_id"}),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found", "Invalid Factor"}),
+			Hydrate:      getOktaFactor,
+			KeyColumns:   plugin.AllColumns([]string{"id", "user_id"}),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found", "Invalid Factor"})},
 		},
 		List: &plugin.ListConfig{
 			ParentHydrate: listOktaUsers,

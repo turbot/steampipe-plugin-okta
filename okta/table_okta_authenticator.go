@@ -4,9 +4,9 @@ import (
 	"context"
 
 	oktaV5 "github.com/okta/okta-sdk-golang/v5/okta"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 )
 
 //// TABLE DEFINITION
@@ -17,9 +17,9 @@ func tableOktaAuthenticator() *plugin.Table {
 		Name:        "okta_authenticator",
 		Description: "Represents an Okta Authenticator configured in the organization.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getOktaAuthenticator,
-			KeyColumns:        plugin.SingleColumn("id"),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      getOktaAuthenticator,
+			KeyColumns:   plugin.SingleColumn("id"),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaAuthenticators,

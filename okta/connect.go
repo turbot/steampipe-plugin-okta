@@ -9,13 +9,13 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	oktaV4 "github.com/okta/okta-sdk-golang/v4/okta"
 	oktaV5 "github.com/okta/okta-sdk-golang/v5/okta"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 	// have we already created and cached the session?
 	sessionCacheKey := "OktaSession"
-	if cachedData, ok := d.ConnectionManager.Cache.Get(sessionCacheKey); ok {
+	if cachedData, ok := d.ConnectionCache.Get(ctx, sessionCacheKey); ok {
 		return cachedData.(*okta.Client), nil
 	}
 
@@ -32,7 +32,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+		_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 		client.GetConfig()
 		return client, err
 	}
@@ -42,7 +42,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+		_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 		return client, err
 	}
 
@@ -61,7 +61,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 	}
 
 	// Save session into cache
-	d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+	_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 
 	return client, err
 }
@@ -69,7 +69,7 @@ func Connect(ctx context.Context, d *plugin.QueryData) (*okta.Client, error) {
 func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, error) {
 	// have we already created and cached the session?
 	sessionCacheKey := "OktaSessionV4"
-	if cachedData, ok := d.ConnectionManager.Cache.Get(sessionCacheKey); ok {
+	if cachedData, ok := d.ConnectionCache.Get(ctx, sessionCacheKey); ok {
 		return cachedData.(*oktaV4.APIClient), nil
 	}
 
@@ -87,7 +87,7 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 		}
 		client := oktaV4.NewAPIClient(oktaConfiguratiopn)
 
-		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+		_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 		return client, err
 	}
 
@@ -99,7 +99,7 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 
 		client := oktaV4.NewAPIClient(oktaConfiguratiopn)
 
-		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+		_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 		return client, err
 	}
 
@@ -119,7 +119,7 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 	client := oktaV4.NewAPIClient(oktaConfiguratiopn)
 
 	// Save session into cache
-	d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+	_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 
 	return client, err
 }
@@ -127,7 +127,7 @@ func ConnectV4(ctx context.Context, d *plugin.QueryData) (*oktaV4.APIClient, err
 func ConnectV5(ctx context.Context, d *plugin.QueryData) (*oktaV5.APIClient, error) {
 	// have we already created and cached the session?
 	sessionCacheKey := "OktaSessionV5"
-	if cachedData, ok := d.ConnectionManager.Cache.Get(sessionCacheKey); ok {
+	if cachedData, ok := d.ConnectionCache.Get(ctx, sessionCacheKey); ok {
 		return cachedData.(*oktaV5.APIClient), nil
 	}
 
@@ -146,7 +146,7 @@ func ConnectV5(ctx context.Context, d *plugin.QueryData) (*oktaV5.APIClient, err
 		}
 		client := oktaV5.NewAPIClient(oktaConfiguratiopn)
 
-		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+		_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 		return client, err
 	}
 
@@ -158,7 +158,7 @@ func ConnectV5(ctx context.Context, d *plugin.QueryData) (*oktaV5.APIClient, err
 
 		client := oktaV5.NewAPIClient(oktaConfiguratiopn)
 
-		d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+		_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 		return client, err
 	}
 
@@ -178,7 +178,7 @@ func ConnectV5(ctx context.Context, d *plugin.QueryData) (*oktaV5.APIClient, err
 	client := oktaV5.NewAPIClient(oktaConfiguratiopn)
 
 	// Save session into cache
-	d.ConnectionManager.Cache.Set(sessionCacheKey, client)
+	_ = d.ConnectionCache.Set(ctx, sessionCacheKey, client)
 
 	return client, err
 }

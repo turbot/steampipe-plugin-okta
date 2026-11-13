@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 //// TABLE DEFINITION
@@ -18,9 +18,9 @@ func tableOktaUserType() *plugin.Table {
 		Name:        "okta_user_type",
 		Description: "Represents an Okta user account.",
 		Get: &plugin.GetConfig{
-			Hydrate:           getOktaUserType,
-			KeyColumns:        plugin.SingleColumn("id"),
-			ShouldIgnoreError: isNotFoundError([]string{"Not found"}),
+			Hydrate:      getOktaUserType,
+			KeyColumns:   plugin.SingleColumn("id"),
+			IgnoreConfig: &plugin.IgnoreConfig{ShouldIgnoreErrorFunc: isNotFoundError([]string{"Not found"})},
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOktaUserTypes,
