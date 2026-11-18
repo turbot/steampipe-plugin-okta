@@ -2,6 +2,8 @@ package okta
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -71,7 +73,7 @@ type OktaFactor struct {
 
 func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	client, err := ConnectV4(ctx, d)
+	client, err := Connect(ctx, d)
 	if err != nil {
 		logger.Error("okta_factor.listOktaFactors", "connect_error", err)
 		return nil, err
@@ -103,9 +105,18 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		return nil, nil
 	}
 
-	factorReq := client.UserFactorAPI.ListFactors(ctx, userId)
+	// The v4 SDK decodes factors into a oneOf union that silently yields an empty
+	// value for factor types it doesn't model (e.g. "signed_nonce", Okta Verify
+	// with FastPass), so decode the raw response to avoid dropping them.
+	executor := client.GetRequestExecutor().WithAccept("application/json").WithContentType("application/json")
+	req, err := executor.NewRequest("GET", fmt.Sprintf("/api/v1/users/%s/factors", userId), nil)
+	if err != nil {
+		logger.Error("okta_factor.listOktaFactors", "request_error", err)
+		return nil, err
+	}
 
-	factors, resp, err := factorReq.Execute()
+	var factors []json.RawMessage
+	resp, err := executor.Do(ctx, req, &factors)
 	if err != nil {
 		logger.Error("okta_factor.listOktaFactors", "api_error", err)
 		if strings.Contains(err.Error(), "Not found") {
@@ -114,49 +125,32 @@ func listOktaFactors(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		return nil, err
 	}
 
-	for _, factor := range factors {
-		if factor.GetActualInstance() != nil {
-			factorDetails := getFactorDetails(factor.GetActualInstance())
-			d.StreamListItem(ctx, UserFactorInfo{
-				UserId:   userId,
-				UserName: userName,
-				Factor:   factorDetails,
-			})
+	for {
+		for _, raw := range factors {
+			factor, err := parseFactor(raw)
+			if err != nil {
+				logger.Error("okta_factor.listOktaFactors", "parse_error", err)
+				return nil, err
+			}
+			d.StreamListItem(ctx, UserFactorInfo{UserId: userId, UserName: userName, Factor: factor})
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
 			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
-	}
 
-	// paging
-	for resp.HasNextPage() {
-		var nextFactorSet []oktav4.ListFactors200ResponseInner
-		resp, err = resp.Next(&nextFactorSet)
-		if err != nil {
+		// paging
+		if !resp.HasNextPage() {
+			return nil, nil
+		}
+		var next []json.RawMessage
+		if resp, err = resp.Next(ctx, &next); err != nil {
 			logger.Error("okta_factor.listOktaFactors", "api_paging_error", err)
 			return nil, err
 		}
-
-		for _, factor := range nextFactorSet {
-			if factor.GetActualInstance() != nil {
-				f := getFactorDetails(factor.GetActualInstance())
-				d.StreamListItem(ctx, UserFactorInfo{
-					UserId:   userId,
-					UserName: userName,
-					Factor:   f,
-				})
-
-				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.RowsRemaining(ctx) == 0 {
-					return nil, nil
-				}
-			}
-		}
+		factors = next
 	}
-
-	return nil, err
 }
 
 //// HYDRATE FUNCTIONS
@@ -189,87 +183,47 @@ func getOktaFactor(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	userProfile := *user.Profile
 	userName := userProfile.Login
 
-	factorReq := client.UserFactorAPI.GetFactor(ctx, userId, factorId)
-	result, _, err := factorReq.Execute()
+	// See listOktaFactors: decode the raw response so that factor types unknown to
+	// the v4 SDK (e.g. "signed_nonce") are not dropped.
+	v2Client, err := Connect(ctx, d)
 	if err != nil {
+		logger.Error("okta_factor.getOktaFactor", "connection_error", err)
+		return nil, err
+	}
+	executor := v2Client.GetRequestExecutor().WithAccept("application/json").WithContentType("application/json")
+	req, err := executor.NewRequest("GET", fmt.Sprintf("/api/v1/users/%s/factors/%s", userId, factorId), nil)
+	if err != nil {
+		logger.Error("okta_factor.getOktaFactor", "request_error", err)
+		return nil, err
+	}
+	var raw json.RawMessage
+	if _, err := executor.Do(ctx, req, &raw); err != nil {
 		logger.Error("okta_factor.getOktaFactor", "api_error", err)
 		return nil, err
 	}
-
-	if result.GetActualInstance() == nil {
-		return nil, nil
+	f, err := parseFactor(raw)
+	if err != nil {
+		logger.Error("okta_factor.getOktaFactor", "parse_error", err)
+		return nil, err
 	}
-	f := getFactorDetails(result.GetActualInstance())
 
 	return &UserFactorInfo{UserId: userId, UserName: *userName, Factor: f}, nil
 }
 
 //// UTILITY FUNCTION
 
-func getFactorDetails(i interface{}) OktaFactor {
-	f := OktaFactor{}
-
-	switch item := i.(type) {
-	case *oktav4.UserFactorCall:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorCustomHOTP:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorEmail:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorHardware:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorPush:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorSMS:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorSecurityQuestion:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorTOTP:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorToken:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorU2F:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorWeb:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
-	case *oktav4.UserFactorWebAuthn:
-		f = OktaFactor{
-			item.UserFactor,
-			item.Profile,
-		}
+// parseFactor decodes a factor from its raw API representation, keeping the
+// common fields and the type-specific profile for any factor type.
+func parseFactor(raw []byte) (OktaFactor, error) {
+	var base oktav4.UserFactor
+	if err := json.Unmarshal(raw, &base); err != nil {
+		return OktaFactor{}, err
 	}
-	return f
+	var extra struct {
+		Profile interface{} `json:"profile"`
+	}
+	if err := json.Unmarshal(raw, &extra); err != nil {
+		return OktaFactor{}, err
+	}
+	return OktaFactor{UserFactor: base, Profile: extra.Profile}, nil
 }
